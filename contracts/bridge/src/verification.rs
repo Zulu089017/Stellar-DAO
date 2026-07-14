@@ -40,13 +40,38 @@ impl AttestationVerifier for Secp256k1Verifier {
         digest: &BytesN<32>,
         signature: &BytesN<64>,
     ) -> bool {
-        // Production-ready verifier. The host function returns true only if
-        // the signature is a valid secp256k1 (secp256r1) signature over the
-        // digest for the compressed public key. In soroban-sdk 21.x the
-        // host method is named `secp256r1_verify` (the NIST P-256 alias);
-        // 22.x renamed it back to `secp256k1_verify`. The curve and arg
-        // order are identical.
-        env.crypto().secp256r1_verify(public_key, signature, digest)
+        // SECURITY STUB — returns false on every call.
+        //
+        // soroban-sdk 21.x renames the host function to `secp256r1_verify`
+        // AND expects a 65-byte signature (`r || s || v`, recovery-id byte),
+        // not the 64-byte `r || s` compact form that the relayer (and the
+        // upstream Ethereum ecosystem) produces. Migrating to 65-byte
+        // signatures is a cross-cutting change:
+        //   * this verifier needs to deserialize the recovery byte
+        //   * `packages/sdk/src/attestation.ts` needs to encode 65 bytes
+        //   * `apps/relayer/src/operator/signer.ts` needs to produce 65
+        //     bytes (probably via `@noble/curves/secp256k1` recovery param)
+        //   * `apps/sdk/src/contracts/bridge.ts::buildMint` payload types
+        //     and SDK methods need a new optional `recoveryId: u8` field
+        //
+        // Until that migration lands, attempting to call the host function
+        // would either:
+        //   (a) silently accept bogus sigs if we feed it a 64-byte value
+        //       coerced to 65 (zero-padded), or
+        //   (b) panic on type mismatch in the host.
+        //
+        // Returning false is the safe intermediate: every sign threshold is
+        // unreachable, every brute-force mint attempt is rejected, and the
+        // CI contract compile check passes without misleading future
+        // maintainers into thinking sig verification works.
+        //
+        // See followup: "Migrate bridge attestation signing from 64-byte
+        // r||s to 65-byte r||s||v against soroban-sdk 21.7.7."
+        let _ = public_key;
+        let _ = digest;
+        let _ = signature;
+        let _ = env;
+        false
     }
 }
 
