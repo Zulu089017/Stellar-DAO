@@ -187,6 +187,10 @@ impl Factory {
         buf.extend_from_slice(b"STELLARDAO_FACTORY_V1");
         buf.extend_from_slice(source_chain.clone().into_val(env).serialize(env).as_slice());
         buf.extend_from_slice(source_token.as_slice());
-        env.crypto().sha256(&buf)
+        // `env.crypto().sha256` returns `soroban_sdk::crypto::Hash<32>` in
+        // soroban-sdk 21.x. `BytesN<32>` is `From<Hash<32>>` (cheap newtype
+        // wrap around the same 32-byte buffer), so `.into()` converts at
+        // zero cost without an extra allocation.
+        env.crypto().sha256(&buf).into()
     }
 }

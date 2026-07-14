@@ -1,5 +1,13 @@
 #![no_std]
 
+// `Symbol::to_string()` is implemented via `alloc` types (String +
+// ToString trait). The no_std contract author must `extern crate alloc;`
+// to opt in to the `alloc` API surface even though `soroban-sdk` already
+// links `alloc` internally — without this Rust 2021 no_std rejects any
+// `use alloc::...` or `.to_string()` on `alloc`-backed types.
+extern crate alloc;
+
+
 //! # Bridge Contract
 //!
 //! Single entry point for cross-chain wrap/unwrap operations.
@@ -20,8 +28,11 @@
 //! the verifier interface can be swapped for ed25519 or a Wormhole/LayerZero
 //! proof without changing the contract surface.
 
+use alloc::string::ToString;
+
 use soroban_sdk::{
-    contract, contractimpl, vec, Address, BytesN, Env, Symbol, Vec,
+    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
+    contract, contractimpl, vec, Address, BytesN, Env, IntoVal, Symbol, Vec,
 };
 
 mod storage;
@@ -50,7 +61,7 @@ impl Bridge {
 
         assert!(!operators.is_empty(), "operators must not be empty");
         assert!(
-            threshold as usize >= 1 && threshold as usize <= operators.len(),
+            threshold as usize >= 1 && threshold as usize <= operators.len() as usize,
             "invalid threshold",
         );
 
@@ -100,7 +111,7 @@ impl Bridge {
 
         assert!(!operators.is_empty(), "operators must not be empty");
         assert!(
-            threshold as usize >= 1 && threshold as usize <= operators.len(),
+            threshold as usize >= 1 && threshold as usize <= operators.len() as usize,
             "invalid threshold",
         );
 
@@ -134,19 +145,37 @@ impl Bridge {
             "nonce reused"
         );
 
-        // Cross-contract auth: tell the host this contract authorizes the
-        // bridge address to act on its behalf, then call wrapper-token.mint,
-        // which does `bridge.require_auth()`. The auth tree handles the
-        // delegation.
-        Self::auth_self(&env);
+        // Cross-contract auth: in soroban-sdk 21.x the bridge must declare
+        // an InvokerContractAuthEntry for every wrapper-token sub-invocation
+        // ahead of time so that `wrapper-token.mint`'s `bridge.require_auth()`
+        // call resolves against a host-verifiable auth tree. In 21.x the
+        // entry is constructed as a struct literal (there is no
+        // `InvokerContractAuthEntry::new` constructor at this SDK version);
+        // the inner Vec<InvokerContractAuthEntry> is the recursive sub-tree
+        // for nested calls — empty for the leaf mint call. The `fn_name`
+        // field + arg list must EXACTLY match the `invoke_contract` call
+        // below or the host errors at apply-time, so we build the args once
+        // and reuse them.
+        let mint_args: Vec<Val> = vec![
+            &env,
+            payload.recipient.clone().into_val(&env),
+            payload.amount.into_val(&env),
+        ];
+        env.authorize_as_current_contract(vec![
+            &env,
+            InvokerContractAuthEntry::Contract(SubContractInvocation {
+                context: ContractContext {
+                    contract: wrapper_token.clone(),
+                    fn_name: Symbol::new(&env, "mint"),
+                    args: mint_args.clone(),
+                },
+                sub_invocations: vec![&env],
+            }),
+        ]);
         env.invoke_contract::<()>(
             &wrapper_token,
             &Symbol::new(&env, "mint"),
-            vec![
-                &env,
-                payload.recipient.to_val(),
-                payload.amount.to_val(),
-            ],
+            mint_args,
         );
 
         env.storage().persistent().set(&payload.nonce, &true);
@@ -183,15 +212,28 @@ impl Bridge {
             "nonce reused"
         );
 
-        Self::auth_self(&env);
+        // Mirror of `mint_with_attestation`: declare the exact auth entry
+        // for the wrapper-token.burn sub-invocation before invoking it.
+        let burn_args: Vec<Val> = vec![
+            &env,
+            payload.source_address.clone().into_val(&env),
+            payload.amount.into_val(&env),
+        ];
+        env.authorize_as_current_contract(vec![
+            &env,
+            InvokerContractAuthEntry::Contract(SubContractInvocation {
+                context: ContractContext {
+                    contract: wrapper_token.clone(),
+                    fn_name: Symbol::new(&env, "burn"),
+                    args: burn_args.clone(),
+                },
+                sub_invocations: vec![&env],
+            }),
+        ]);
         env.invoke_contract::<()>(
             &wrapper_token,
             &Symbol::new(&env, "burn"),
-            vec![
-                &env,
-                payload.source_address.to_val(),
-                payload.amount.to_val(),
-            ],
+            burn_args,
         );
 
         env.storage().persistent().set(&payload.nonce, &true);
@@ -205,14 +247,6 @@ impl Bridge {
                 payload.nonce.clone(),
             ),
         );
-    }
-
-    /// Authorize the bridge contract to act on its own behalf before
-    /// `invoke_contract` calls. Required because the wrapper-token uses
-    /// `bridge.require_auth()` in mint/burn.
-    fn auth_self(env: &Env) {
-        let self_addr = env.current_contract_address();
-        env.authorize_as_current_contract(self_addr);
     }
 
     fn verify_lock(

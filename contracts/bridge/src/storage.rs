@@ -43,7 +43,7 @@ impl LockPayload {
         buf.extend_from_slice(self.recipient.to_string().as_bytes());
         buf.extend_from_slice(&self.amount.to_be_bytes());
         buf.extend_from_slice(self.nonce.as_slice());
-        env.crypto().sha256(&buf)
+        env.crypto().sha256(&buf).into()
     }
 }
 
@@ -71,6 +71,6 @@ impl UnlockPayload {
         buf.extend_from_slice(self.source_address.as_slice());
         buf.extend_from_slice(&self.amount.to_be_bytes());
         buf.extend_from_slice(self.nonce.as_slice());
-        env.crypto().sha256(&buf)
+        env.crypto().sha256(&buf).into()
     }
 }

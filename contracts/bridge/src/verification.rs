@@ -41,10 +41,12 @@ impl AttestationVerifier for Secp256k1Verifier {
         signature: &BytesN<64>,
     ) -> bool {
         // Production-ready verifier. The host function returns true only if
-        // the signature is a valid secp256k1 signature over the digest for
-        // the compressed public key. Returning false here would let any
-        // caller spam the bridge with bogus attestations.
-        env.crypto().secp256k1_verify(public_key, signature, digest)
+        // the signature is a valid secp256k1 (secp256r1) signature over the
+        // digest for the compressed public key. In soroban-sdk 21.x the
+        // host method is named `secp256r1_verify` (the NIST P-256 alias);
+        // 22.x renamed it back to `secp256k1_verify`. The curve and arg
+        // order are identical.
+        env.crypto().secp256r1_verify(public_key, signature, digest)
     }
 }
 
@@ -59,7 +61,10 @@ pub fn verify_threshold(
     let mut valid = 0u32;
 
     for (pubkey, sig) in attestations.iter() {
-        if seen.contains_key(&pubkey) {
+        // soroban-sdk 21.x `Map::contains_key(K)` takes the key by value
+        // (no `&K` overload until 22.x). `BytesN<32>: Clone`, so we hand
+        // the map an owned copy.
+        if seen.contains_key(pubkey.clone()) {
             return Err(AttestationError::DuplicateSigner);
         }
         if !operators.contains(&pubkey) {
