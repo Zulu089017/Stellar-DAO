@@ -1,13 +1,5 @@
 #![no_std]
 
-// `Symbol::to_string()` is implemented via `alloc` types (String +
-// ToString trait). The no_std contract author must `extern crate alloc;`
-// to opt in to the `alloc` API surface even though `soroban-sdk` already
-// links `alloc` internally — without this Rust 2021 no_std rejects any
-// `use alloc::...` or `.to_string()` on `alloc`-backed types.
-extern crate alloc;
-
-
 //! # Bridge Contract
 //!
 //! Single entry point for cross-chain wrap/unwrap operations.
@@ -28,18 +20,23 @@ extern crate alloc;
 //! the verifier interface can be swapped for ed25519 or a Wormhole/LayerZero
 //! proof without changing the contract surface.
 
-use alloc::string::ToString;
+// `Symbol::to_string()` is implemented via `alloc` types (String +
+// ToString trait). The no_std contract author must `extern crate alloc;`
+// to opt in to the `alloc` API surface even though `soroban-sdk` already
+// links `alloc` internally — without this Rust 2021 no_std rejects any
+// `use alloc::...` or `.to_string()` on `alloc`-backed types.
+
 
 use soroban_sdk::{
     auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
-    contract, contractimpl, vec, Address, BytesN, Env, IntoVal, Symbol, Vec,
+    contract, contractimpl, vec, Address, BytesN, Env, IntoVal, Symbol, Val, Vec,
 };
 
 mod storage;
 mod verification;
 
 pub use storage::{DataKey, LockPayload, UnlockPayload};
-pub use verification::{verify_attestation, AttestationError, AttestationVerifier};
+pub use verification::{verify_attestation, verify_threshold, AttestationError, AttestationVerifier};
 
 #[contract]
 pub struct Bridge;
@@ -186,7 +183,7 @@ impl Bridge {
                 wrapper_token.clone(),
                 payload.recipient.clone(),
                 payload.amount,
-                payload.source_chain.to_string(),
+                payload.source_chain.clone(),
                 payload.source_token.clone(),
                 payload.nonce.clone(),
             ),

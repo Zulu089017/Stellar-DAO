@@ -28,7 +28,7 @@ categories = ["cryptography::cryptocurrencies"]
 # source uses the pre-22 API surface (`env.crypto().sha256()` returning
 # `BytesN<32>` directly, single-arg `authorize_as_current_contract`,
 # `IntoVal` trait) and any 22.x bump would trigger ~22 compile errors.
-soroban-sdk = { version = "=21.7.7" }
+soroban-sdk = { version = "=21.7.7", features = ["alloc"] }
 soroban-token-sdk = { version = "=21.7.7" }
 
 [profile.release]

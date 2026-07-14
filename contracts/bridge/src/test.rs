@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::Address as _, vec, Address, Bytes, BytesN, Env, IntoVal, Symbol, Vec};
+use soroban_sdk::{testutils::Address as _, vec, Address, Bytes, BytesN, Env, IntoVal, Vec};
 
 fn deploy_bridge(env: &Env) -> (Address, Address, Vec<BytesN<32>>) {
     let bridge_id = env.register_contract(None, Bridge);
@@ -79,7 +79,7 @@ fn mint_rejects_replay_of_nonce() {
     let wrapper = Address::generate(&env);
     let recipient = Address::generate(&env);
     let payload = LockPayload {
-        source_chain: Symbol::new(&env, "ethereum"),
+        source_chain: soroban_sdk::String::from_str(&env, "ethereum"),
         source_token: Bytes::from_slice(&env, &[1, 2, 3]),
         wrapper_token: BytesN::from_array(&env, &[7u8; 32]),
         recipient,

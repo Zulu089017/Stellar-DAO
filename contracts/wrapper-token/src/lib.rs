@@ -13,24 +13,28 @@
 //!     market data services can identify each wrapper.
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, panic_with_error, vec, Address, Bytes, Env, IntoVal,
-    Symbol, Vec,
+    contract, contractimpl, contracttype, panic_with_error, Address, Bytes, Env, Symbol,
 };
 
 mod error;
 mod metadata;
 
 pub use error::TokenError;
-pub use metadata::DataKey;
+pub use metadata::{AllowanceKey, DataKey};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TokenEvent {
-    Mint { to: Address, amount: i128 },
-    Burn { from: Address, amount: i128 },
-    Transfer { from: Address, to: Address, amount: i128 },
-    Approve { from: Address, spender: Address, amount: i128, expiration_ledger: u32 },
-    BurnFrom { spender: Address, from: Address, amount: i128 },
+    // Tuple variants because `#[contracttype]` in soroban-sdk 21.x forbids
+    // named fields on enum variants — the SCVal wire format encodes
+    // variants by index + payload order, not by name. We keep these as
+    // canonical SEP-41 event shapes; the bridge's own published events
+    // (using `(Symbol, Symbol)` topics) are unaffected by this rename.
+    Mint(Address, i128),
+    Burn(Address, i128),
+    Transfer(Address, Address, i128),
+    Approve(Address, Address, i128, u32),
+    BurnFrom(Address, Address, i128),
 }
 
 #[contract]
@@ -177,9 +181,18 @@ impl WrapperToken {
         env.storage()
             .persistent()
             .set(&(owner.clone(), spender.clone()), &amount);
+        // 3-tuple `(owner, spender, DataKey::AllowanceExpiry)` Map keys are
+        // rejected by the soroban-sdk 21.x host. Use the `AllowanceKey`
+        // struct wrapped in the `DataKey::AllowanceExpiry` variant instead.
         env.storage()
             .persistent()
-            .set(&(owner.clone(), spender.clone(), DataKey::AllowanceExpiry), &expiration_ledger);
+            .set(
+                &DataKey::AllowanceExpiry(AllowanceKey {
+                    owner: owner.clone(),
+                    spender: spender.clone(),
+                }),
+                &expiration_ledger,
+            );
 
         env.events().publish(
             (Symbol::new(&env, "approve"), Symbol::new(&env, "Approve")),
@@ -193,7 +206,10 @@ impl WrapperToken {
         let expiry: u32 = env
             .storage()
             .persistent()
-            .get(&(from.clone(), spender.clone(), DataKey::AllowanceExpiry))
+            .get(&DataKey::AllowanceExpiry(AllowanceKey {
+                owner: from.clone(),
+                spender: spender.clone(),
+            }))
             .unwrap_or(0u32);
         if expiry != 0 && expiry < env.ledger().sequence() {
             panic_with_error!(env, TokenError::AllowanceExpired);
