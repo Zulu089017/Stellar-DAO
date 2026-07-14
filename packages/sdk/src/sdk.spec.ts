@@ -63,7 +63,7 @@ describe('buildUnlockDigest', () => {
 });
 
 describe('verifySecp256k1', () => {
-  it('returns false on a tampered signature', () => {
+  it('returns false on a tampered signature', async () => {
     const secret = new Uint8Array(32).fill(11);
     const digest = buildLockDigest({
       sourceChain: 'ethereum',
@@ -77,7 +77,7 @@ describe('verifySecp256k1', () => {
     const pub = secp256k1.getPublicKey(secret, true);
     const tampered = sig.slice();
     tampered[0]! ^= 0xff;
-    expect(verifySecp256k1(digest, pub, tampered)).resolves.toBe(false);
+    await expect(verifySecp256k1(digest, pub, tampered)).resolves.toBe(false);
     // also sanity-check that the noble sha256 import really works in this env
     expect(sha256(new Uint8Array([1, 2, 3])).length).toBe(32);
   });
