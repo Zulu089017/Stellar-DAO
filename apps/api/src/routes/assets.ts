@@ -82,6 +82,16 @@ export const assetRoutes = async (app: FastifyInstance): Promise<void> => {
       op,
     );
 
+    // Pre-stage pattern: `factory.simulateAndSubmit` returns the txHash
+    // synchronously, but the on-chain wrapper-token contract address is
+    // computed only after Soroban confirms the deployment (filling the
+    // slot is the responsibility of the future `handleFactoryConfirmation`
+    // webhook — TODO(50-item backlog, factory-confirmation)). The
+    // registry entry is upserted with an empty `wrapperToken` so the
+    // dashboard can subscribe to confirmations BEFORE the on-chain
+    // contract exists. Asset integration tests assert this empty-string
+    // pre-stage; do NOT replace with a stub value without updating
+    // `apps/api/src/routes/assets.integration.spec.ts` accordingly.
     const entry = await assetRepository.upsertBySource({
       wrapperToken: '',
       source,
