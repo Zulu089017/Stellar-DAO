@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { AssetsTable } from '@/components/dashboard/assets-table';
+import { AssetsLiveTable } from '@/components/dashboard/assets-live-table';
 import { serverApi } from '@/lib/server-api';
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default async function AssetsPage() {
           <code className="mono text-stellar-cloud">WrapperCreated</code> event is indexed by Horizon.
         </p>
       </header>
-      <AssetsTable assets={data.assets} />
+      <AssetsLiveTable initial={data.assets} />
     </div>
   );
 }
