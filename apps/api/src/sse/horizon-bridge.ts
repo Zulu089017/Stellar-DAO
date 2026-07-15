@@ -46,11 +46,29 @@ export const registerSseBridge = async (app: FastifyInstance): Promise<void> => 
       reply.raw.write(`event: ${event}\n`);
       reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
     };
+    // Closing helper. Idempotent — calling after the underlying
+    // writable already ended is a no-op (stream.end on a closed
+    // stream raises a benign ERR_STREAM_DESTROYED that we swallow).
+    // Without this, the SSE stream technically stays open forever
+    // (the for-await can terminus only when Horizon's
+    // `_links.next === null`, which it never is in practice on a
+    // healthy contract). Per SSE spec, closing tells clients "no
+    // more events" — they can reconnect with `Last-Event-ID` to
+    // resume. Without it, every dashboard EventSource holds a
+    // socket open until process exit.
+    const closeStream = (): void => {
+      try {
+        reply.raw.end();
+      } catch {
+        /* writable already destroyed — fine */
+      }
+    };
 
     writeEvent('hello', { ts: Date.now() });
 
     if (!env.BRIDGE_CONTRACT_ID) {
       writeEvent('warning', { message: 'BRIDGE_CONTRACT_ID not configured' });
+      closeStream();
       return;
     }
 
@@ -72,7 +90,7 @@ export const registerSseBridge = async (app: FastifyInstance): Promise<void> => 
     req.raw.on('close', () => {
       unsubscribeTransactions();
       unsubscribeAssets();
-      reply.raw.end();
+      closeStream();
     });
 
     try {
@@ -80,7 +98,29 @@ export const registerSseBridge = async (app: FastifyInstance): Promise<void> => 
         writeEvent('contract-event', record);
       }
     } catch (err) {
-      writeEvent('error', { message: (err as Error).message });
+      // Idempotent write — if `req.raw.on('close')` already ran
+      // (client disconnected mid-retry) the stream Writable is
+      // destroyed, and `writeEvent` throws ERR_STREAM_DESTROYED.
+      // Silently swallow so the handler doesn't reject with the
+      // swallow; closeStream() in `finally` ends the stream cleanly.
+      try {
+        writeEvent('error', { message: (err as Error).message });
+      } catch {
+        /* writable already destroyed during close race */
+      }
+    } finally {
+      // End the SSE stream when the contract-event source has no
+      // more events to deliver (normal exit or upstream throw).
+      // The req.raw.on('close') handler covers the client-disconnect
+      // path independently. Both paths run when client disconnects
+      // mid-retry — the double unsubscribe (`off()` is idempotent)
+      // and double `closeStream()` (`reply.raw.end()` is idempotent
+      // via the try/catch above) are intentional, so a
+      // stream-end-without-disconnect case still cleans up bus
+      // subscriptions even when the disconnect path didn't fire.
+      unsubscribeTransactions();
+      unsubscribeAssets();
+      closeStream();
     }
   });
 };
