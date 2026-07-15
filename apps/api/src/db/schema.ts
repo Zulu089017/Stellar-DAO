@@ -1,13 +1,19 @@
 /**
- * Postgres schema (drizzle). The in-memory repos above are the default
- * scaffold behaviour; if `DATABASE_URL` is set, these tables back them
- * via a swap-in `DrizzleAssetRepository`. Future migrations live in
- * `apps/api/drizzle/`.
+ * Postgres schema (drizzle). `assetRepository` and `transactionRepository`
+ * swap to these tables when `DATABASE_URL` is present.
+ *
+ * `assets.id` is the composite key `${chain}:${address.toLowerCase()}`
+ * produced by `keyFor()` in `asset-repository.ts` so that inserts are
+ * idempotent on the source pair (no need for a surrogate key + unique
+ * constraint) and the in-memory `Map<string, AssetRegistryEntry>` lives
+ * under the same identifier — keeping the schema aligned with the
+ * domain means the repo layer never has to translate between two
+ * identifier spaces.
  */
-import { pgTable, serial, text, varchar, timestamp, bigint, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, varchar, timestamp, bigint, integer } from 'drizzle-orm/pg-core';
 
 export const assets = pgTable('assets', {
-  id: serial('id').primaryKey(),
+  id: varchar('id', { length: 150 }).primaryKey(),
   wrapperToken: varchar('wrapper_token', { length: 64 }).notNull(),
   chain: varchar('chain', { length: 16 }).notNull(),
   sourceAddress: varchar('source_address', { length: 128 }).notNull(),

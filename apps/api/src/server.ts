@@ -17,6 +17,8 @@ import sensible from '@fastify/sensible';
 import { Keypair } from '@stellar/stellar-sdk';
 import { parseEnv } from '@stellardao/shared';
 
+import { initAssetRepository } from './db/repositories/asset-repository.js';
+import { initTransactionRepository } from './db/repositories/transaction-repository.js';
 import { assetRoutes } from './routes/assets.js';
 import { bridgeRoutes } from './routes/bridge.js';
 import { healthRoutes } from './routes/health.js';
@@ -62,6 +64,15 @@ app.decorate(
 );
   app.decorate('networkPassphrase', env.STELLAR_NETWORK_PASSPHRASE);
   app.decorate('sorobanRpcUrl', env.SOROBAN_RPC_URL);
+
+  // Repository swap is driven by `DATABASE_URL` — present in the
+  // env means a Postgres-backed drizzle impl; absent keeps the
+  // in-memory default. Doing it at createServer time (rather than at
+  // module import) lets tests use createServer multiple times in the
+  // same worker without leaking the swap between specs — the env
+  // cache is reset in each beforeEach via `__resetEnvCache()`.
+  await initAssetRepository(env.DATABASE_URL);
+  await initTransactionRepository(env.DATABASE_URL);
 
   await app.register(healthRoutes, { prefix: '/health' });
   await app.register(assetRoutes, { prefix: '/assets' });

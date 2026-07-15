@@ -5,6 +5,8 @@ import sensible from '@fastify/sensible';
 import { Keypair } from '@stellar/stellar-sdk';
 import { parseEnv } from '@stellardao/shared';
 
+import { initAssetRepository } from './db/repositories/asset-repository.js';
+import { initTransactionRepository } from './db/repositories/transaction-repository.js';
 import { assetRoutes } from './routes/assets.js';
 import { bridgeRoutes } from './routes/bridge.js';
 import { healthRoutes } from './routes/health.js';
@@ -42,6 +44,13 @@ app.decorate(
 );
 app.decorate('networkPassphrase', env.STELLAR_NETWORK_PASSPHRASE);
 app.decorate('sorobanRpcUrl', env.SOROBAN_RPC_URL);
+
+// Repository swap mirrors the createServer wiring: presence of
+// DATABASE_URL enables the drizzle-backed repos (with raw-SQL
+// `CREATE TABLE IF NOT EXISTS` bootstrap); absence keeps the in-memory
+// defaults so the scaffold still boots against an empty `.env`.
+await initAssetRepository(env.DATABASE_URL);
+await initTransactionRepository(env.DATABASE_URL);
 
 declare module 'fastify' {
   interface FastifyInstance {
