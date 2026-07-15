@@ -1,36 +1,42 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { StatusDot } from '@stellardao/ui';
-import { SOURCE_CHAINS, type Transaction, type TxStatus } from '@stellardao/shared';
+import type { Transaction, TxStatus } from '@stellardao/shared';
 
 import { ChainBadge } from '@/components/atoms/chain-badge';
 
 const statusFilters: TxStatus[] = ['pending', 'attesting', 'minting', 'completed', 'failed', 'refunded'];
 
+/**
+ * Refining transaction filter UI.
+ *
+ * The chain-level filter has moved server-side (URL param
+ * `?chain=X` + API `sourceChain` filter), so this component only
+ * narrows the loaded set by status / type / free-text search. The
+ * page-level chain filter gives sharable URLs and zero round-trip
+ * re-filtering on the client.
+ */
 export const TransactionsPanel = ({
   initial,
-  chainFilter,
   typeFilter,
 }: {
   initial: Transaction[];
-  chainFilter?: string;
   typeFilter?: string;
 }) => {
-  const [chain, setChain] = useState(chainFilter ?? 'all');
   const [type, setType] = useState(typeFilter ?? 'all');
   const [status, setStatus] = useState<TxStatus | 'all'>('all');
   const [search, setSearch] = useState('');
 
   const filtered = useMemo(() => {
     return initial.filter((tx) => {
-      if (chain !== 'all' && tx.sourceChain !== chain) return false;
       if (type !== 'all' && tx.type !== type) return false;
       if (status !== 'all' && tx.status !== status) return false;
       if (search && !tx.id.includes(search) && !tx.sourceToken.includes(search)) return false;
       return true;
     });
-  }, [initial, chain, type, status, search]);
+  }, [initial, type, status, search]);
 
   return (
     <div className="space-y-6">
@@ -42,12 +48,6 @@ export const TransactionsPanel = ({
           onChange={(e) => setSearch(e.target.value)}
           className="focus-ring flex-1 rounded-lg border border-white/10 bg-stellar-ink/40 px-3 py-1.5 text-stellar-cloud placeholder:text-stellar-haze"
         />
-        <div className="flex flex-wrap gap-1">
-          <FilterChip active={chain === 'all'} onClick={() => setChain('all')} label="All chains" />
-          {SOURCE_CHAINS.map((c) => (
-            <FilterChip key={c} active={chain === c} onClick={() => setChain(c)} label={c} />
-          ))}
-        </div>
         <div className="flex gap-1">
           <FilterChip active={type === 'all'} onClick={() => setType('all')} label="wrap+unwrap" />
           <FilterChip active={type === 'wrap'} onClick={() => setType('wrap')} label="wrap" />
@@ -63,8 +63,14 @@ export const TransactionsPanel = ({
 
       <div className="glass-panel overflow-hidden rounded-3xl">
         {filtered.length === 0 ? (
-          <div className="p-10 text-center text-sm text-stellar-haze">
-            No matching transactions.
+          <div className="flex flex-col items-center gap-3 p-10 text-center text-sm text-stellar-haze">
+            <p>No matching transactions.</p>
+            <Link
+              href="/wrap"
+              className="focus-ring inline-flex rounded-xl bg-gradient-to-r from-stellar-aurora to-stellar-nova px-4 py-2 text-xs font-semibold text-white shadow-glow"
+            >
+              Start a wrap →
+            </Link>
           </div>
         ) : (
           <table className="w-full text-left text-sm">

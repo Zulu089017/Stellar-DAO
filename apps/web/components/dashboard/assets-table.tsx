@@ -7,12 +7,25 @@ import { AddressDisplay } from '@/components/atoms/address-display';
 export const AssetsTable = ({ assets }: { assets: AssetRegistryEntry[] }) => {
   if (assets.length === 0) {
     return (
-      <div className="glass-panel flex flex-col items-center gap-4 rounded-3xl p-12 text-center">
-        <p className="text-sm uppercase tracking-widest text-stellar-haze">No assets deployed yet</p>
-        <p className="max-w-md text-sm text-stellar-haze">
-          Once a developer calls <code className="mono text-stellar-cloud">factory.create_wrapper</code>{' '}
-          for the first time, the asset appears here.
-        </p>
+      <div className="glass-panel flex flex-col items-center gap-5 rounded-3xl p-14 text-center">
+        <div className="grid h-14 w-14 place-items-center rounded-2xl border border-white/10 bg-white/[0.04] text-xl font-semibold text-stellar-aurora">
+          ✦
+        </div>
+        <div className="space-y-2">
+          <p className="text-sm uppercase tracking-widest text-stellar-haze">No assets deployed yet</p>
+          <p className="mx-auto max-w-md text-sm text-stellar-haze">
+            Once a developer calls{' '}
+            <code className="mono text-stellar-cloud">factory.create_wrapper</code> for a source-chain
+            token, the wrapper appears here. To exercise the full pipeline without standing up a real
+            factory, kick off a wrap on testnet — it&apos;ll route through the same mocks.
+          </p>
+        </div>
+        <Link
+          href="/wrap"
+          className="focus-ring inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-stellar-aurora to-stellar-nova px-5 py-3 text-sm font-semibold text-white shadow-glow transition-transform hover:-translate-y-0.5"
+        >
+          Wrap a token →
+        </Link>
       </div>
     );
   }
