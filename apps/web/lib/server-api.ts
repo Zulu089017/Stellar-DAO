@@ -7,6 +7,7 @@ import type {
   ListAssetsResponse,
   Transaction,
   SourceChainId,
+  TxStatus,
 } from '@stellardao/shared';
 
 const DEFAULT_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
@@ -21,6 +22,21 @@ const buildQueryString = (q?: Query) => {
   }
   const s = url.toString();
   return s ? `?${s}` : '';
+};
+
+/** Body shape accepted by POST /bridge/wrap. */
+export type WrapRequestBody = {
+  sourceChain: SourceChainId;
+  sourceToken: string;
+  wrapperToken: string;
+  recipient: string;
+  amount: string;
+};
+
+/** Response from POST /bridge/wrap (202 Accepted). */
+export type WrapRequestResponse = {
+  txId: string;
+  status: TxStatus;
 };
 
 export const serverApi = {
@@ -49,5 +65,26 @@ export const serverApi = {
     } catch {
       return null;
     }
+  },
+
+  /**
+   * Submit a wrap request to the API.
+   *
+   * The API validates the body, creates a Transaction row, then walks
+   * its lifecycle (pending → attesting → minting → completed) in the
+   * background. Each step fans out over SSE; the wrap page opens an
+   * EventSource filtered by the returned txId to advance the UI.
+   */
+  async submitWrap(body: WrapRequestBody): Promise<WrapRequestResponse> {
+    const r = await fetch(`${DEFAULT_BASE}/bridge/wrap`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) {
+      const errBody = (await r.json().catch(() => ({}))) as { message?: string };
+      throw new Error(errBody.message ?? `wrap failed (${r.status})`);
+    }
+    return (await r.json()) as WrapRequestResponse;
   },
 };

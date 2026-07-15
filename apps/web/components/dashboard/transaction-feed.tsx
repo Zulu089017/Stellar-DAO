@@ -17,14 +17,40 @@ export const TransactionFeed = ({ initial }: { initial: Transaction[] }) => {
     if (!streamOn) return;
     const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
     const es = new EventSource(`${apiBase}/events`);
-    es.addEventListener('contract-event', (event) => {
+
+    /**
+     * Merge an incoming transaction row from any SSE event type.
+     * Either event shape is `Transaction` (the bus broadcasts raw
+     * rows; Horizon events are projected into the same shape so a
+     * Soroban mint lands on the feed identically to a wrap).
+     * De-dupe by id so lifecycle walks (`pending → completed`) and
+     * duplicate deliveries don't prepend phantom entries.
+     */
+    const upsertItem = (tx: Transaction) => {
+      setItems((prev) => {
+        const idx = prev.findIndex((p) => p.id === tx.id);
+        if (idx === -1) return [tx, ...prev.slice(0, 19)];
+        const next = [...prev];
+        next[idx] = tx;
+        return next;
+      });
+    };
+
+    es.addEventListener('transaction-update', (event) => {
       try {
-        const parsed = JSON.parse((event as MessageEvent).data) as Transaction;
-        setItems((prev) => [parsed, ...prev.slice(0, 19)]);
+        upsertItem(JSON.parse((event as MessageEvent).data) as Transaction);
       } catch {
         /* ignore malformed events */
       }
     });
+    es.addEventListener('contract-event', (event) => {
+      try {
+        upsertItem(JSON.parse((event as MessageEvent).data) as Transaction);
+      } catch {
+        /* ignore malformed events */
+      }
+    });
+
     return () => es.close();
   }, [streamOn]);
 
