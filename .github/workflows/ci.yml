@@ -57,35 +57,25 @@ jobs:
       - name: Test
         run: pnpm test
 
-      # Soroban contracts are scaffold-grade and reference APIs that don't
-      # yet exist on any released soroban-sdk 21.x or 22.x:
-      #   - `env.crypto().sha256(&buf)` expected to return
-      #     `soroban_sdk::BytesN<32>` directly, but every released SDK
-      #     returns `soroban_sdk::crypto::Hash<32>` (needs `.into()`).
-      #   - `env.authorize_as_current_contract(Address)` expected to take
-      #     `Address`, but every released SDK takes
-      #     `Vec<InvokerContractAuthEntry>`.
-      #   - `#[contracterror]` enums used by value (e.g. in
-      #     `error.unwrap_or(|| panic_with_error!())`) need to derive
-      #     `Copy` for non-`Copy` error enums.
-      # These three changes plus the ed25519-dalek v3 / ChaCha20Rng
-      # trait-bound mismatch in soroban-env-host 21.2.1 require a
-      # dedicated refactor pass — tracked as a follow-up issue. Until
-      # then, the cargo steps are best-effort and do not block merges
-      # gated by `pnpm lint / typecheck / test / build`.
-      - name: Cargo check (Soroban contracts — best-effort, needs contract refactor)
+      # Soroban contracts are pinned to `soroban-sdk = =21.7.7` (the
+      # final 21.x release) — see `contracts/Cargo.toml` for the
+      # rationale (22.x bumps ed25519-dalek v3 + ChaCha20Rng break the
+      # rand_core trait chain, and the contract source uses the pre-22
+      # API surface). The three crates below are now gating CI:
+      #   cargo check enforces the SDK absorbs the source unchanged
+      #   cargo test --no-run enforces host-side test compilation
+      #   cargo build --target wasm32-unknown-unknown --release
+      #     enforces the WASM artefact ships from current source.
+      - name: Cargo check (Soroban contracts)
         working-directory: contracts
-        continue-on-error: true
         run: cargo check --workspace --lib --bins
 
-      - name: Cargo test compile (best-effort — soroban-env-host 21.2.1 ed25519-dalek / ChaCha20Rng trait-bound)
+      - name: Cargo test compile (Soroban contracts)
         working-directory: contracts
-        continue-on-error: true
         run: cargo test --workspace --no-run
 
-      - name: Build (WASM — best-effort, needs contract refactor)
+      - name: Build (WASM — Soroban contracts)
         working-directory: contracts
-        continue-on-error: true
         run: cargo build --target wasm32-unknown-unknown --release --workspace
 
       - name: Build (Node bundles)

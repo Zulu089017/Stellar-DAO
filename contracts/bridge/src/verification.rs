@@ -140,9 +140,15 @@ mod tests {
     #[test]
     fn empty_attestations_do_not_meet_threshold() {
         let env = Env::default();
-        let operators: Vec<BytesN<32>> = Vec::new();
+        // `Vec::new` on soroban-sdk 21.x requires the host env to
+        // allocate the host-managed buffer — the previous `Vec::new()`
+        // here compiled against a pre-21 SDK where the type carried its
+        // own inline storage. The `#[cfg(test)] feature = "testutils"`
+        // dev-dep pulls in the same 21.x Vec, so the env arg is required
+        // here.
+        let operators: Vec<BytesN<32>> = Vec::new(&env);
         let digest = BytesN::from_array(&env, &[0u8; 32]);
-        let attestations: Vec<(BytesN<32>, BytesN<64>)> = Vec::new();
+        let attestations: Vec<(BytesN<32>, BytesN<64>)> = Vec::new(&env);
         let result = verify_threshold(&env, &operators, 1, &digest, &attestations);
         assert!(matches!(result, Err(AttestationError::InsufficientSignatures)));
     }
