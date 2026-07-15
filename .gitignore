@@ -53,5 +53,8 @@ contracts/**/*.wat
 stellar/keys/
 stellar/identities/
 
-# Generated
-packages/soroban-client/src/bindings/
+# Generated Soroban bindings live in repo — the three stub files
+# (`packages/soroban-client/src/bindings/{bridge,factory,wrapper-token}.ts`)
+# are committed as a fallback so `pnpm typecheck` is green before contracts
+# are deployed.  When `scripts/generate-bindings.ts` is run after
+# `pnpm contracts:deploy`, real bindings overwrite the stubs.
