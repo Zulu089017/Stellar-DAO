@@ -23,6 +23,7 @@ import { assetRoutes } from './routes/assets.js';
 import { bridgeRoutes } from './routes/bridge.js';
 import { healthRoutes } from './routes/health.js';
 import { transactionRoutes } from './routes/transactions.js';
+import { webhookRoutes } from './routes/webhooks.js';
 import { registerSseBridge } from './sse/horizon-bridge.js';
 
 export type ServerOptions = {
@@ -78,6 +79,7 @@ app.decorate(
   await app.register(assetRoutes, { prefix: '/assets' });
   await app.register(bridgeRoutes, { prefix: '/bridge' });
   await app.register(transactionRoutes, { prefix: '/transactions' });
+  await app.register(webhookRoutes, { prefix: '/webhooks' });
 
   await registerSseBridge(app);
 

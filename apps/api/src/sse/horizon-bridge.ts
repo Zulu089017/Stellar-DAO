@@ -1,9 +1,9 @@
 /**
  * Server-Sent Events bridge.
  *
- * Fans out two streams over the same `/events` endpoint using SSE's
+ * Fans out THREE streams over the same `/events` endpoint using SSE's
  * `event:` discriminator so the dashboard can open a single EventSource
- * and listen for both:
+ * and listen for all of them:
  *
  *   • `contract-event`     — every Soroban event observed on the bridge
  *                            contract via Horizon's
@@ -11,6 +11,13 @@
  *   • `transaction-update` — every successful `transactionRepository.upsert`
  *                            call (covers wrap submissions, lifecycle
  *                            walks, future relayer webhooks).
+ *   • `asset-update`       — every asset-registry mutation fired by
+ *                            `POST /assets` (initial registration) or
+ *                            `POST /webhooks/factory/confirm` (the
+ *                            on-chain wrapperToken slot fill-in). The
+ *                            dashboard's AssetTable listens for this
+ *                            to flip a row from "pre-stage" to
+ *                            "deployed".
  *
  * Bus-driven events are kept lossless: whatever code path calls
  * `transactionRepository.upsert` automatically fans out here, with no
@@ -20,7 +27,7 @@ import type { FastifyInstance } from 'fastify';
 import { parseEnv } from '@stellardao/shared';
 import { HorizonClient } from '@stellardao/sdk';
 
-import { subscribeTransactions } from './event-bus.js';
+import { subscribeAssets, subscribeTransactions } from './event-bus.js';
 
 export const registerSseBridge = async (app: FastifyInstance): Promise<void> => {
   const env = parseEnv.api();
@@ -50,12 +57,21 @@ export const registerSseBridge = async (app: FastifyInstance): Promise<void> => 
     // Subscribe to the in-process transaction bus. Every
     // transactionRepository.upsert call from the wrap route (and from
     // future mint / webhook paths) fires here.
-    const unsubscribe = subscribeTransactions(({ transaction }) => {
+    const unsubscribeTransactions = subscribeTransactions(({ transaction }) => {
       writeEvent('transaction-update', transaction);
     });
 
+    // Subscribe to the in-process asset bus. POST /assets fires
+    // `registered` and the factory-confirmation webhook fires
+    // `wrapperToken-filled`; both surface here so dashboards don't
+    // need a second EventSource for the asset table.
+    const unsubscribeAssets = subscribeAssets(({ entry, updateType }) => {
+      writeEvent('asset-update', { entry, updateType });
+    });
+
     req.raw.on('close', () => {
-      unsubscribe();
+      unsubscribeTransactions();
+      unsubscribeAssets();
       reply.raw.end();
     });
 
