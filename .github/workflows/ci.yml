@@ -82,14 +82,23 @@ jobs:
       # known CVEs in the dependency graph so reviewers notice them
       # when they touch the lockfile. The cargo-audit install is
       # cached by Swatinem/rust-cache@v2 via the workspace lockfile
-      # so subsequent runs are sub-second.
+      # so subsequent runs are sub-second. cargo-audit's version is
+      # pinned explicitly (same patch of the audit logic on every
+      # run); bump in a dedicated PR if the upstream API breaks.
       - name: Audit Rust dependencies (advisory)
         continue-on-error: true
         working-directory: contracts
         run: |
-          cargo install cargo-audit --locked
+          cargo install cargo-audit --version 0.21.2 --locked
           cargo audit
 
+      # Uses `npm audit --omit=dev` rather than `pnpm audit` because
+      # pnpm 9.x's audit endpoint was retired by the npm registry
+      # (returns 410) and pnpm hasn't shipped a follow-up. npm's CLI
+      # in the setup-node@v4 toolchain (Node 20.11) still queries the
+      # live `/audits/v2/` path. `--omit=dev` matches the spirit of
+      # the previous `pnpm audit --prod` (skip transient dev-only
+      # vulns so the table stays actionable).
       - name: Audit Node dependencies (advisory)
         continue-on-error: true
-        run: pnpm audit --prod
+        run: npm audit --omit=dev --json
