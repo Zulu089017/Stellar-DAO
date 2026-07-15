@@ -18,23 +18,30 @@
  * loop already does this (see `apps/relayer/operator/relay-pipeline
  * .ts`).
  *
- * Security: this endpoint is intentionally UNAUTHENTICATED for item
- * 12 — strict shape validation gates against random payload
- * guessing, and the on-chain confirmation proof is implicit in
- * the partner deciding to POST. Without HMAC, a malicious actor
- * with knowledge of a publicly known sourceToken (e.g. USDC on
- * Ethereum) could POST a fake confirmation here and divert lock
- * events to a wrapper token they control — silent fill-in is the
- * blocking case.
+ * Security: HMAC-SHA256 verification of `X-Stellar-DAO-Signature`
+ * is MANDATORY when `RELAYER_HMAC_SECRET` is configured. The
+ * signature is `hex(hmac_sha256(RELAYER_HMAC_SECRET,
+ * JSON.stringify(body))`; the server compares in constant time via
+ * `crypto.timingSafeEqual` after a length pre-check (to avoid the
+ * comparison call throwing on length mismatch). 401 on any
+ * mismatch — missing header, malformed hex, wrong digest,
+ * length-mismatched hex, body that doesn't match. When the secret
+ * is empty (test suite / local dev / ephemeral CI), the endpoint
+ * still enforces strict zod shape validation but skips the HMAC
+ * check; this is intentional and documented in `env/index.ts`.
  *
- * TODO(security, future): validate `X-Stellar-DAO-Signature`
- * HMAC-SHA256 of `JSON.stringify(req.body)` against a shared secret
- * loaded from `RELAYER_HMAC_SECRET` env var; constant-time
- * comparison; respond 401 on mismatch. This closes the silent-
- * fill-in attack above without changing the public schema.
+ * Body canonicalization: `JSON.stringify(req.body)` is the simple
+ * form here. Fastify's flat body parser preserves insertion order
+ * when the producer side uses the same parser (the test suite
+ * injects JSON-shaped payloads directly, so producer + consumer
+ * agree). A future hardening pass to switch to canonical JSON
+ * (`safe-stable-stringify`) is tracked as a follow-up.
  */
+import crypto from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
+
+import { parseEnv } from '@stellardao/shared';
 
 import { assetRepository } from '../db/repositories/asset-repository.js';
 import { broadcastAssetUpdate } from '../sse/event-bus.js';
@@ -76,7 +83,48 @@ export const webhookRoutes = async (app: FastifyInstance): Promise<void> => {
     async (req, reply) => {
       const parsed = FactoryConfirmationSchema.safeParse(req.body);
       if (!parsed.success) return reply.badRequest(parsed.error.message);
+
       const { sourceChain, sourceToken, wrapperToken } = parsed.data;
+
+      // HMAC verification — only enforced when the secret is configured.
+      // Empty secret => dev/test/ephemeral-CI mode (still shape-validated
+      // above, but producers don't need to sign). Production deployments
+      // set `RELAYER_HMAC_SECRET` so a malicious actor with knowledge of
+      // a publicly-known sourceToken cannot POST a fake confirmation.
+      const env = parseEnv.api();
+      const secret = env.RELAYER_HMAC_SECRET;
+      if (secret) {
+        const provided = req.headers['x-stellar-dao-signature'];
+        if (typeof provided !== 'string' || provided.length === 0) {
+          return reply.unauthorized('missing X-Stellar-DAO-Signature');
+        }
+        // Producer-coupling assumption: the partner MUST compute the
+        // signature as `hex(hmac_sha256(RELAYER_HMAC_SECRET,
+        // JSON.stringify(body)))` using the same compact, no-space
+        // JSON.stringify() that Fastify's body parser emits on the wire.
+        // A producer that pretty-prints (`.stringify(body, null, 2)`)
+        // or that re-orders keys will fail HMAC here even though the
+        // parsed JSON is semantically equivalent — the simple form
+        // is sufficient for every existing producer (relayer +
+        // sender SDK both use compact stringification). Track
+        // canonical JSON via `safe-stable-stringify` as a future
+        // hardening pass so new producers can pretty-print without
+        // a contract bump.
+        const expectedHex = crypto
+          .createHmac('sha256', secret)
+          .update(JSON.stringify(req.body))
+          .digest('hex');
+        const providedBuf = Buffer.from(provided, 'hex');
+        const expectedBuf = Buffer.from(expectedHex, 'hex');
+        // `timingSafeEqual` throws on length mismatch — pre-check first
+        // so we still emit a 401 (not a 500) for length-bad headers.
+        if (
+          providedBuf.length !== expectedBuf.length ||
+          !crypto.timingSafeEqual(providedBuf, expectedBuf)
+        ) {
+          return reply.unauthorized('X-Stellar-DAO-Signature mismatch');
+        }
+      }
 
       const existing = await assetRepository.findBySource(sourceChain, sourceToken);
       if (!existing) {

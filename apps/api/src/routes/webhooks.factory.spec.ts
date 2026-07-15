@@ -25,6 +25,7 @@
  * step of the happy-path tests can run without touching real Soroban.
  */
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
+import crypto from 'node:crypto';
 import { Keypair, StrKey } from '@stellar/stellar-sdk';
 import { FactoryContract } from '@stellardao/sdk';
 import { __resetEnvCache } from '@stellardao/shared';
@@ -324,5 +325,141 @@ describe('POST /webhooks/factory/confirm', () => {
       chain: 'ethereum',
       address: SOURCE_TOKEN,
     });
+  });
+});
+
+/* ─────────────────── POST /webhooks/factory/confirm: HMAC verification ─────────────────── *
+ * When `RELAYER_HMAC_SECRET` is configured, the route enforces
+ * `X-Stellar-DAO-Signature = hex(hmac_sha256(secret, JSON.stringify(body)))`
+ * in constant time. When the secret is empty (test suite default,
+ * ephemeral CI, local dev), enforcement is bypassed — that's the
+ * path the rest of this file exercises. The block below pins the
+ * enforced-mode behaviour: 202 on valid, 401 on every mismatch class.
+ */
+const HMAC_TEST_SECRET = 'a-test-secret-that-is-32-chars-or-more-stable';
+
+const computeHmac = (body: unknown): string =>
+  crypto
+    .createHmac('sha256', HMAC_TEST_SECRET)
+    .update(JSON.stringify(body))
+    .digest('hex');
+
+describe('POST /webhooks/factory/confirm (HMAC verification)', () => {
+  let app: Awaited<ReturnType<typeof createServer>>;
+  let simulateSpy: MockInstance;
+
+  const validBody = () => ({
+    sourceChain: 'ethereum',
+    sourceToken: SOURCE_TOKEN,
+    wrapperToken: VALID_WRAPPER_TOKEN,
+  });
+
+  beforeEach(async () => {
+    setupTestEnv();
+    process.env.RELAYER_HMAC_SECRET = HMAC_TEST_SECRET;
+    __resetEnvCache();
+    simulateSpy = vi
+      .spyOn(FactoryContract.prototype, 'simulateAndSubmit')
+      .mockResolvedValue('a'.repeat(64));
+    app = await createServer();
+    await __resetAssetRepoForTest();
+    __resetContractInstances();
+    __resetEventBusForTest();
+    // Establish the pre-stage so the only thing varying across the
+    // 401 paths below is the HMAC, not the missing-pre-stage 404
+    // branch (which has its own dedicated test above).
+    await app.inject({
+      method: 'POST',
+      url: '/assets',
+      headers: { 'x-developer-public-key': Keypair.random().publicKey() },
+      payload: {
+        source: { chain: 'ethereum', address: SOURCE_TOKEN },
+        name: 'Wrapped HMAC',
+        symbol: 'wHMAC',
+        decimals: 18,
+      },
+    });
+  });
+
+  afterEach(async () => {
+    if (app) await app.close();
+    simulateSpy.mockRestore();
+    await __resetAssetRepoForTest();
+    __resetContractInstances();
+    delete process.env.RELAYER_HMAC_SECRET;
+    __resetEnvCache();
+  });
+
+  it('returns 202 on valid HMAC-SHA256 signature (happy path)', async () => {
+    const body = validBody();
+    const sig = computeHmac(body);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/webhooks/factory/confirm',
+      headers: { 'x-stellar-dao-signature': sig },
+      payload: body,
+    });
+    expect(res.statusCode).toBe(202);
+  });
+
+  it('returns 401 when X-Stellar-DAO-Signature header is absent', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/webhooks/factory/confirm',
+      payload: validBody(),
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('returns 401 when one byte of the HMAC digest is flipped (wrong signature)', async () => {
+    const body = validBody();
+    const good = computeHmac(body);
+    // Flip the LAST hex character to a guaranteed-different value so
+    // the test doesn't depend on the position-1 byte being a '0' or
+    // similar — pick `'1'` if the last char is `'0'`, else `'0'`.
+    const last = good.slice(-1);
+    const swapped = last === '0' ? '1' : '0';
+    const tampered = good.slice(0, -1) + swapped;
+    expect(tampered).not.toBe(good);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/webhooks/factory/confirm',
+      headers: { 'x-stellar-dao-signature': tampered },
+      payload: body,
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('returns 401 when the body is mutated after signing (HMAC is body-bound)', async () => {
+    const original = validBody();
+    const sig = computeHmac(original);
+    const mutated = { ...original, sourceToken: '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef' };
+    const res = await app.inject({
+      method: 'POST',
+      url: '/webhooks/factory/confirm',
+      headers: { 'x-stellar-dao-signature': sig },
+      payload: mutated,
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('returns 401 when the signature header is non-hex garbage (length pre-check fails before timingSafeEqual)', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/webhooks/factory/confirm',
+      headers: { 'x-stellar-dao-signature': 'not-hex-at-all!!' },
+      payload: validBody(),
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it('returns 401 when the signature header is shorter than the expected SHA-256 digest', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/webhooks/factory/confirm',
+      headers: { 'x-stellar-dao-signature': 'aabbccdd' }, // 4 hex chars, expected = 64
+      payload: validBody(),
+    });
+    expect(res.statusCode).toBe(401);
   });
 });

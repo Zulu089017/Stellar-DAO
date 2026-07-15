@@ -47,6 +47,22 @@ const BridgeEnvSchema = BaseEnvSchema.extend({
 const ApiEnvSchema = BridgeEnvSchema.extend({
   API_PORT: z.coerce.number().int().positive().default(4000),
   DATABASE_URL: z.string().min(1).optional(),
+  // Bypass flag: when the HMAC secret is empty, `POST
+  // /webhooks/factory/confirm` accepts unsigned requests (the
+  // pre-stage-strict-shape-validation gate still runs). This lets
+  // the test suite, the local dev loop, and ephemeral CI runners
+  // exercise the route without standing up a producer that signs
+  // every body. Production deployments MUST set the secret; the
+  // helper text in `docs/CONTRIBUTING.md` / `.env.example` makes
+  // that explicit. The `.optional().default('')` chain keeps the
+  // `.regex(/^(C|$)/)` style regression-free (zod v3 re-applies the
+  // validator to the substituted default — an empty string passes
+  // trivially, no ZodError at boot).
+  RELAYER_HMAC_SECRET: z
+    .string()
+    .regex(/^.{0,512}$/, 'must be empty or 1-512 chars')
+    .optional()
+    .default(''),
 });
 
 const WebEnvSchema = z.object({
