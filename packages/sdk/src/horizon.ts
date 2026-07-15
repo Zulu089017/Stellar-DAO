@@ -4,7 +4,9 @@
  * Keeps the rest of the codebase off `fetch()` so we can:
  *   1. Centralize the URL/headers/timeout behaviour.
  *   2. Surface typed errors when Horizon is down (real-time feed needs to know).
- *   3. Apply simple retry budgets for read endpoints.
+ *   3. Apply the retry policy from `./retry.js` (3 attempts,
+ *      exponential backoff with full jitter, retryable on
+ *      5xx/408/429/network).
  *
  * Note: stellar-sdk v12 dropped `Horizon.Server.networkPassphrase` as a
  * public field. We track the network passphrase locally based on the
@@ -13,6 +15,7 @@
 import { Horizon, Networks } from '@stellar/stellar-sdk';
 import { z } from 'zod';
 import type { StellarNetwork } from '@stellardao/shared';
+import { withRetry } from './retry.js';
 
 const HorizonErrorSchema = z.object({
   status: z.number(),
@@ -26,6 +29,12 @@ export type HorizonClientOptions = {
   baseUrl: string;
   network: StellarNetwork;
   fetchTimeoutMs?: number;
+  /**
+   * Optional fetcher injection seam. Defaults to `globalThis.fetch`.
+   * Tests pass a vi.fn() to assert retry-on-503 behaviour without
+   * stubbing globals.
+   */
+  fetcher?: typeof fetch;
 };
 
 const PASSPHRASES: Record<StellarNetwork, string> = {
@@ -40,6 +49,7 @@ export class HorizonClient {
   private readonly _network: StellarNetwork;
   private readonly baseUrl: string;
   private readonly fetchTimeoutMs: number;
+  private readonly _fetch: typeof fetch;
 
   constructor(opts: HorizonClientOptions) {
     this.server = new Horizon.Server(opts.baseUrl, {
@@ -51,6 +61,7 @@ export class HorizonClient {
     this._network = opts.network;
     this.baseUrl = opts.baseUrl;
     this.fetchTimeoutMs = opts.fetchTimeoutMs ?? 10_000;
+    this._fetch = opts.fetcher ?? globalThis.fetch;
   }
 
   get network(): StellarNetwork {
@@ -62,14 +73,27 @@ export class HorizonClient {
     return this.passphrase;
   }
 
-  /** Lightweight liveness probe — used by /api/health and the UI banner. */
+  /**
+   * Liveness probe — used by /api/health and the UI banner. Returns
+   * `true` once any retry-and-status combo lands in 2xx, `false` if
+   * every retry exhausted (network down, repeated 5xx, timeout, or
+   * caller-supplied signal abort). Never throws.
+   */
   async ping(): Promise<boolean> {
     try {
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), this.fetchTimeoutMs);
-      const res = await fetch(`${this.baseUrl}/`, { signal: ctrl.signal });
-      clearTimeout(t);
-      return res.ok;
+      return await withRetry(async () => {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), this.fetchTimeoutMs);
+        try {
+          const res = await this._fetch(`${this.baseUrl}/`, { signal: ctrl.signal });
+          if (!res.ok) {
+            throw Object.assign(new Error(`ping HTTP ${res.status}`), { response: res });
+          }
+          return true;
+        } finally {
+          clearTimeout(t);
+        }
+      });
     } catch {
       return false;
     }
@@ -82,18 +106,26 @@ export class HorizonClient {
       const url = new URL(`${this.baseUrl}/contracts/${contractId}/events`);
       url.searchParams.set('cursor', nextCursor);
       url.searchParams.set('limit', '100');
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), this.fetchTimeoutMs);
-      const res = await fetch(url, { signal: ctrl.signal });
-      clearTimeout(t);
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`horizon /events failed: ${res.status} ${err}`);
-      }
-      const body = (await res.json()) as {
-        _embedded: { records: unknown[] };
-        _links: { next: { href: string } | null };
-      };
+      const body = await withRetry(async () => {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), this.fetchTimeoutMs);
+        try {
+          const res = await this._fetch(url, { signal: ctrl.signal });
+          if (!res.ok) {
+            const errBody = await res.text();
+            throw Object.assign(
+              new Error(`horizon /events failed: ${res.status} ${errBody}`),
+              { response: res },
+            );
+          }
+          return (await res.json()) as {
+            _embedded: { records: unknown[] };
+            _links: { next: { href: string } | null };
+          };
+        } finally {
+          clearTimeout(t);
+        }
+      });
       nextCursor = body._links.next?.href ? extractCursor(body._links.next.href) : undefined;
       for (const record of body._embedded.records) {
         yield record;
@@ -101,13 +133,31 @@ export class HorizonClient {
     }
   }
 
-  /** Direct Horizon call passthrough for ad-hoc types we don't want to model yet. */
+  /**
+   * Direct Horizon call passthrough for ad-hoc types we don't want to
+   * model yet. Throws on non-2xx (after retry budget exhausted) and
+   * attaches the failed Response to the thrown error so callers can
+   * inspect status / headers.
+   */
   raw(pathname: string, init: RequestInit = {}): Promise<Response> {
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), this.fetchTimeoutMs);
-    return fetch(`${this.baseUrl}${pathname}`, { ...init, signal: ctrl.signal }).finally(() =>
-      clearTimeout(t),
-    );
+    return withRetry(async () => {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), this.fetchTimeoutMs);
+      try {
+        const res = await this._fetch(`${this.baseUrl}${pathname}`, {
+          ...init,
+          signal: ctrl.signal,
+        });
+        if (!res.ok) {
+          throw Object.assign(new Error(`raw ${pathname} HTTP ${res.status}`), {
+            response: res,
+          });
+        }
+        return res;
+      } finally {
+        clearTimeout(t);
+      }
+    });
   }
 
   parseError(json: unknown): HorizonError {
