@@ -41,3 +41,20 @@ export const isValidAddress = (chain: SourceChainId, address: string): boolean =
       return SOLANA_ADDRESS.test(address);
   }
 };
+
+/**
+ * Pre-built Set gives O(1) lookup for the type guard below. Typed as
+ * `Set<string>` (not `Set<SourceChainId>`) so `.has(value)` accepts
+ * `string` directly without a cast — the runtime invariant (only
+ * SourceChainId strings ever end up in the set) still holds.
+ */
+const SOURCE_CHAIN_SET: ReadonlySet<string> = new Set<string>(SOURCE_CHAINS);
+
+/**
+ * Type guard for untrusted strings (URL search params, user input,
+ * external API responses). Centralised here so the routes that promote
+ * a `string | undefined` into a `SourceChainId` don't each re-implement
+ * the `SOURCE_CHAINS.includes` dance.
+ */
+export const isSourceChain = (value: string | undefined): value is SourceChainId =>
+  value !== undefined && SOURCE_CHAIN_SET.has(value);

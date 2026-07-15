@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { SOURCE_CHAINS, chainLabel } from '@stellardao/shared';
+import { chainLabel, isSourceChain } from '@stellardao/shared';
 
 import { ChainBadge } from '@/components/atoms/chain-badge';
 import { AddressDisplay } from '@/components/atoms/address-display';
@@ -9,9 +9,6 @@ import { EventStreamPanel } from '@/components/dashboard/event-stream-panel';
 import { serverApi } from '@/lib/server-api';
 
 type Params = { chain: string; address: string };
-
-const isChain = (chain: string): chain is (typeof SOURCE_CHAINS)[number] =>
-  (SOURCE_CHAINS as readonly string[]).includes(chain);
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { address, chain } = await params;
@@ -23,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 
 export default async function AssetDetailPage({ params }: { params: Promise<Params> }) {
   const { chain, address } = await params;
-  if (!isChain(chain)) notFound();
+  if (!isSourceChain(chain)) notFound();
 
   const [assets, transactions] = await Promise.all([
     serverApi.listAssets().catch(() => ({ assets: [] })),
