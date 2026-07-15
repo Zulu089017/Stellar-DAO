@@ -1,0 +1,37 @@
+# EditorConfig: https://editorconfig.org
+#
+# This file pins cross-tool invariants (charset, eol, trim, indent
+# style). The detailed formatting (single quotes, trailing commas,
+# arrow-parens, semicolons, line-wrap) is owned by:
+#   - prettier for `.ts` / `.tsx` / `.js` / `.json` / `.md` / `.yaml`
+#   - rustfmt for `.rs`
+# See CONTRIBUTING.md (Coding conventions). Editors that read this
+# file will indent correctly on first open; prettier / rustfmt clean
+# the rest on save.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# Rust uses 4-space indent (rustfmt default).
+[*.rs]
+indent_size = 4
+
+# Markdown preserves trailing whitespace — two trailing spaces
+# encode a hard line-break in CommonMark.
+[*.md]
+trim_trailing_whitespace = false
+
+# Shell scripts and GitHub Actions YAML: stay 2-space, LF.
+[*.{sh,yaml,yml}]
+indent_size = 2
+
+# Makefiles require hard tabs for recipe lines.
+[Makefile]
+indent_style = tab
