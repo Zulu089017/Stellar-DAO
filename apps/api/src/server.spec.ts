@@ -6,7 +6,9 @@ import { FactoryContract } from '@stellardao/sdk';
 
 import { createServer } from './server.js';
 import { __resetContractInstances } from './soroban/index.js';
+import { __resetEventBusForTest, subscribeTransactions } from './sse/event-bus.js';
 import { assetRepository } from './db/repositories/asset-repository.js';
+import { transactionRepository } from './db/repositories/transaction-repository.js';
 
 /**
  * Vitest env stubs.
@@ -36,11 +38,12 @@ vi.stubEnv('BRIDGE_CONTRACT_ID', 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 vi.stubEnv('FACTORY_CONTRACT_ID', 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM');
 vi.stubEnv('WRAPPER_TOKEN_TEMPLATE_ID', 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM');
 
-// `assetRepository` is backed by a module-level `Map`. The happy-path
-// POST /assets test writes to it; clear after each test so the Map
-// doesn't accumulate phantom entries across runs.
+// In-memory repos hold state across tests in the same worker; clear them
+// after each test so a later spec doesn't see a phantom entry.
 afterEach(() => {
   assetRepository.__clearForTest();
+  transactionRepository.__clearForTest();
+  __resetEventBusForTest();
 });
 
 describe('GET /health', () => {
@@ -211,5 +214,145 @@ describe('POST /bridge/mint (body validation)', () => {
     });
     expect(res.statusCode).toBe(400);
     await app.close();
+  });
+});
+
+describe('POST /bridge/wrap', () => {
+  beforeEach(() => {
+    __resetEnvCache();
+    __resetContractInstances();
+  });
+
+  const validPayload = () => ({
+    sourceChain: 'ethereum',
+    sourceToken: '0xabababababababababababababababababababab',
+    wrapperToken: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM',
+    recipient: Keypair.random().publicKey(),
+    amount: '100',
+  });
+
+  it('returns 202 with txId + pending status for a valid body', async () => {
+    const app = await createServer();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/bridge/wrap',
+      payload: validPayload(),
+    });
+    expect(res.statusCode).toBe(202);
+    const body = res.json();
+    expect(body.status).toBe('pending');
+    expect(typeof body.txId).toBe('string');
+    expect(body.txId.length).toBeGreaterThan(0);
+    await app.close();
+  });
+
+  it('persists a Transaction row in the repository on POST', async () => {
+    const app = await createServer();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/bridge/wrap',
+      payload: validPayload(),
+    });
+    const { txId } = res.json();
+    const tx = await transactionRepository.findById(txId);
+    expect(tx).not.toBeNull();
+    expect(tx?.id).toBe(txId);
+    expect(tx?.type).toBe('wrap');
+    expect(tx?.status).toBe('pending');
+    expect(tx?.stellarTxHash).toBeNull();
+    expect(tx?.amount).toBe('100');
+    await app.close();
+  });
+
+  it('appears on GET /transactions/ right after POST', async () => {
+    const app = await createServer();
+    await app.inject({
+      method: 'POST',
+      url: '/bridge/wrap',
+      payload: validPayload(),
+    });
+    const list = await app.inject({ method: 'GET', url: '/transactions/' });
+    expect(list.statusCode).toBe(200);
+    const body = list.json();
+    expect(body.transactions.length).toBe(1);
+    expect(body.transactions[0]).toMatchObject({ type: 'wrap' });
+    await app.close();
+  });
+
+  it('returns 400 when required fields are missing (validation)', async () => {
+    const app = await createServer();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/bridge/wrap',
+      payload: { sourceChain: 'ethereum' },
+    });
+    expect(res.statusCode).toBe(400);
+    const body = res.json();
+    expect(body.error).toBe('validation_failed');
+    await app.close();
+  });
+
+  it('returns 400 when amount is non-numeric', async () => {
+    const app = await createServer();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/bridge/wrap',
+      payload: { ...validPayload(), amount: 'abc' },
+    });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it('returns 400 when wrapperToken is not a C-address', async () => {
+    const app = await createServer();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/bridge/wrap',
+      payload: { ...validPayload(), wrapperToken: 'NOTACADDRESS' },
+    });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it('returns 400 when sourceChain is unsupported', async () => {
+    const app = await createServer();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/bridge/wrap',
+      payload: { ...validPayload(), sourceChain: 'bitcoin' },
+    });
+    expect(res.statusCode).toBe(400);
+    await app.close();
+  });
+
+  /**
+   * Verifies the in-process SSE bus fans out on every wrap submission.
+   * We subscribe BEFORE the POST so we don't miss the initial
+   * `pending` upsert, which is the only synchronous broadcast — the
+   * later lifecycle steps are timer-driven and not deterministic
+   * inside the test runner.
+   */
+  it('broadcasts transaction-update via the in-process bus on POST', async () => {
+    const events: Array<{ status: string; id: string }> = [];
+    const unsubscribe = subscribeTransactions(({ transaction }) => {
+      events.push({ status: transaction.status, id: transaction.id });
+    });
+
+    const app = await createServer();
+    try {
+      const res = await app.inject({
+        method: 'POST',
+        url: '/bridge/wrap',
+        payload: validPayload(),
+      });
+      expect(res.statusCode).toBe(202);
+      // The POST returns after the synchronous `upsert(initial)`, so
+      // at minimum the initial broadcast has fired.
+      expect(events.length).toBeGreaterThanOrEqual(1);
+      expect(events[0]?.status).toBe('pending');
+    } finally {
+      unsubscribe();
+      await app.close();
+    }
   });
 });
