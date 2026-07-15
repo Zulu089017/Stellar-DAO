@@ -10,9 +10,32 @@ const BaseEnvSchema = z.object({
 });
 
 const BridgeEnvSchema = BaseEnvSchema.extend({
-  BRIDGE_CONTRACT_ID: z.string().startsWith('C').optional().default(''),
-  FACTORY_CONTRACT_ID: z.string().startsWith('C').optional().default(''),
-  WRAPPER_TOKEN_TEMPLATE_ID: z.string().startsWith('C').optional().default(''),
+  // The previous chain `z.string().startsWith('C').optional().default('')`
+  // was a latent bug: zod v3 re-applies the `.startsWith('C')`
+  // validator to the substituted default value, and `''.startsWith('C')`
+  // returns false → ZodError thrown at boot for any deployment that
+  // legitimately leaves these unset (e.g. a brand-new env file, an
+  // ephemeral CI runner, or a web-only deployment that doesn't yet
+  // have the contracts deployed). The `.regex(/^(C|$)/)` form keeps
+  // the typo-prevention intent (still rejects `BRIDGE_CONTRACT_ID=foo`)
+  // while allowing an empty string to satisfy the default-substitution
+  // path. See `packages/shared/src/env/index.spec.ts` for the
+  // regression-prevention tests.
+  BRIDGE_CONTRACT_ID: z
+    .string()
+    .regex(/^(C|$)/, 'must start with C or be empty')
+    .optional()
+    .default(''),
+  FACTORY_CONTRACT_ID: z
+    .string()
+    .regex(/^(C|$)/, 'must start with C or be empty')
+    .optional()
+    .default(''),
+  WRAPPER_TOKEN_TEMPLATE_ID: z
+    .string()
+    .regex(/^(C|$)/, 'must start with C or be empty')
+    .optional()
+    .default(''),
   RELAYER_SECRET_KEY: z.string().optional(),
   RELAYER_PUBLIC_KEY: z.string().optional(),
   RELAYER_THRESHOLD: z.coerce.number().int().min(1).default(2),
