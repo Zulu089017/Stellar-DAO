@@ -17,9 +17,10 @@ const config: NextConfig = {
     };
     return config;
   },
-  experimental: {
-    typedRoutes: true,
-  },
+  // `typedRoutes` graduated from `experimental` in Next.js 15 — moving
+  // it up here now also silences the documented migration warning
+  // surfaced during `next build`.
+  typedRoutes: true,
   async headers() {
     return [
       {

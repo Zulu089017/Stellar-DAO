@@ -23,6 +23,26 @@ cd contracts && cargo build --target wasm32-unknown-unknown --release
 - The shared types in `packages/shared` are the source of truth: do
   not duplicate them in `apps/*` or `packages/*`.
 
+## pnpm version pinning
+
+The exact pnpm version is declared exactly once, in `package.json` via
+the `packageManager` field (`pnpm@9.12.0`). The GitHub Actions
+workflow has no `with: version:` block on `pnpm/action-setup@v4` —
+it auto-detects from `packageManager` so local dev and CI stay in sync.
+
+**Do not add an `engines.pnpm` field.** In pnpm 9+, having both
+`engines.pnpm` (which is a range / constraint) and `packageManager`
+(which is an exact pin) at the same time raises:
+
+```
+ERR_PNPM_MULTIPLE_VERSIONS_SPECIFIED  Multiple versions of pnpm specified
+```
+
+and breaks every install. If you need a different pnpm version, bump
+`packageManager` in `package.json` and update `pnpm-lock.yaml`'s
+header alongside it (`pnpm install --no-frozen-lockfile` once locally
+to regenerate).
+
 ## Updating the contracts
 
 The Soroban host function `secp256k1_verify` may be enabled by future
