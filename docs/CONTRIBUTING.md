@@ -18,8 +18,11 @@ cd contracts && cargo build --target wasm32-unknown-unknown --release
 - TypeScript: 2-space indent, single quotes, trailing commas, 100 chars
   wide (`prettier` does this automatically).
 - Rust: `cargo fmt` + `cargo clippy --all-targets -- -D warnings`.
-- Every contract change must include or update a corresponding test
-  in `contracts/<name>/src/test.rs`.
+- Every contract change must include or update a corresponding
+  integration test in `contracts/integration-tests/`. The in-process
+  `cargo test --workspace` path is intentionally disabled today; see
+  `docs/soroban-testutils-issue.md` for the E0277 in
+  `soroban-env-host` 21.2.1's `with_test_prng` that prevents it.
 - The shared types in `packages/shared` are the source of truth: do
   not duplicate them in `apps/*` or `packages/*`.
 
@@ -50,8 +53,11 @@ SDKs. When that lands:
 
 1. Replace the body of `Secp256k1Verifier::verify` in
    `contracts/bridge/src/verification.rs` with the real call.
-2. Add unit tests for a wrapped `MockVerifier` so we can run
-   threshold checks without standing up Soroban locally.
+2. Add an integration test in `contracts/integration-tests/`
+   that deploys the bridge against a local Soroban RPC and
+   exercises the threshold + signer-uniqueness paths. The
+   in-process testutils path is disabled (see
+   `docs/soroban-testutils-issue.md`).
 3. Bump the workspace version in `contracts/Cargo.toml`.
 
 ## Adding a new source chain
