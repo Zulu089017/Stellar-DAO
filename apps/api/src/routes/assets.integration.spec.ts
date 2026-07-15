@@ -252,6 +252,95 @@ describe('asset routes (Memory impl)', () => {
     // therefore returns `''` here, not the synthetic WRAPPER_TOKEN.
     expect(body.wrapperToken).toBe('');
   });
+
+  /* GET /assets?limit=N — page-size cap honoured; nextCursor set iff
+   * the page is full. ids here are seeded alphabetically so the
+   * pinned sort order (`id` ASC) gives a deterministic first page
+   * regardless of Map insertion order. */
+  it('GET /assets?limit=2 returns the first 2 entries sorted by id ASC + nextCursor set on a full page', async () => {
+    await assetRepository.upsertBySource(makeAssetEntry({ id: 'paging:a', address: '0xpa' }));
+    await assetRepository.upsertBySource(makeAssetEntry({ id: 'paging:b', address: '0xpb' }));
+    await assetRepository.upsertBySource(makeAssetEntry({ id: 'paging:c', address: '0xpc' }));
+
+    const res = await app.inject({ method: 'GET', url: '/assets/?limit=2' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { assets: Array<{ id: string }>; nextCursor?: string };
+    expect(body.assets.map((e) => e.id)).toEqual(['paging:a', 'paging:b']);
+    expect(body.nextCursor).toBe('paging:b');
+  });
+
+  /* Subsequent page via cursor — disjoint from the previous page
+   * and `nextCursor` is OMITTED (not present in JSON) on the final page. */
+  it('GET /assets?limit=2&cursor=paging:b returns paging:c as the final page (no nextCursor key)', async () => {
+    await assetRepository.upsertBySource(makeAssetEntry({ id: 'paging:a', address: '0xpa' }));
+    await assetRepository.upsertBySource(makeAssetEntry({ id: 'paging:b', address: '0xpb' }));
+    await assetRepository.upsertBySource(makeAssetEntry({ id: 'paging:c', address: '0xpc' }));
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/assets/?limit=2&cursor=paging:b',
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { assets: Array<{ id: string }>; nextCursor?: string };
+    expect(body.assets.map((e) => e.id)).toEqual(['paging:c']);
+    // Last page — `nextCursor` must be OMITTED, not present-as-null,
+    // so `Object.keys(body)` does not include `nextCursor` at all.
+    expect(body.nextCursor).toBeUndefined();
+    expect(Object.keys(body)).not.toContain('nextCursor');
+  });
+
+  /* sourceChain filter narrows the page, cursor still ordered ASC. */
+  it('GET /assets?sourceChain=ethereum returns ONLY ethereum entries (multi-chain seed)', async () => {
+    await assetRepository.upsertBySource(makeAssetEntry({ id: 'mix:eth-1', chain: 'ethereum', address: '0xme1' }));
+    await assetRepository.upsertBySource(makeAssetEntry({ id: 'mix:sol-1', chain: 'solana', address: 'So11111111111111111111111111111111111111111' }));
+    await assetRepository.upsertBySource(makeAssetEntry({ id: 'mix:eth-2', chain: 'ethereum', address: '0xme2' }));
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/assets/?sourceChain=ethereum&limit=10',
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { assets: Array<{ source: { chain: string } }> };
+    expect(body.assets).toHaveLength(2);
+    expect(body.assets.every((e) => e.source.chain === 'ethereum')).toBe(true);
+  });
+
+  /* Invalid chain filter is 400 (parity with the `/assets/:chain/:address`
+   * path param validation in the same file). */
+  it('GET /assets?sourceChain=bitcoin returns 400 (ChainEnum rejects at the route boundary)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/assets/?sourceChain=bitcoin',
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  /* Full traversal across multi-pages — every page is disjoint from
+   * the previous one, the union equals the seeded set. Locks in the
+   * cursor-stability invariant at the route layer. */
+  it('GET /assets cursor traversal across multiple pages covers every seeded entry without overlap', async () => {
+    for (const letter of ['walk:a', 'walk:b', 'walk:c', 'walk:d', 'walk:e']) {
+      await assetRepository.upsertBySource(
+        makeAssetEntry({ id: letter, address: '0x' + letter.slice(-1).repeat(40) }),
+      );
+    }
+    const collected: string[] = [];
+    let cursor = '';
+    let pages = 0;
+    while (pages < 10) {
+      pages += 1;
+      const res = await app.inject({
+        method: 'GET',
+        url: `/assets/?limit=2${cursor ? `&cursor=${cursor}` : ''}`,
+      });
+      expect(res.statusCode).toBe(200);
+      const body = res.json() as { assets: Array<{ id: string }>; nextCursor?: string };
+      collected.push(...body.assets.map((e) => e.id));
+      if (!body.nextCursor) break;
+      cursor = body.nextCursor;
+    }
+    expect(collected).toEqual(['walk:a', 'walk:b', 'walk:c', 'walk:d', 'walk:e']);
+  });
 });
 
 /* ─────────────────── Drizzle impl ─────────────────── */
@@ -362,5 +451,76 @@ describe('asset routes (Drizzle impl)', () => {
     expect(methods).toContain('from');
     expect(methods).toContain('where');
     expect(methods).toContain('limit');
+  });
+
+  /* Drizzle listByFilter path: the route now uses
+   * `db.select().from().where(...).orderBy(asc(.id)).limit(N)` for
+   * the listing. Only fluent chain methods appear in the Proxy's
+   * `callLog` — drizzle's `and(...)`, `eq(...)`, `gt(...)`, and
+   * `asc(...)` are FUNCTIONAL OPERATORS passed as args, not chained
+   * methods, so the Proxy never sees them. We assert on the
+   * fluent chain (`select, from, where, orderBy, limit`) being
+   * present and that the response shape is the new
+   * `{ assets: [...], nextCursor? }` discriminated union. */
+  it('GET /assets?sourceChain=ethereum&limit=1 routes through select.from.where.orderBy.limit (single-row page returns nextCursor)', async () => {
+    const entry: AssetRegistryEntry = {
+      id: 'ethereum:0xdrizzlefilter0000000000000000000000000',
+      wrapperToken: WRAPPER_TOKEN,
+      source: {
+        chain: 'ethereum',
+        address: '0xdrizzlefilter0000000000000000000000000',
+      },
+      symbol: 'DRZ',
+      name: 'Drizzle Filter',
+      decimals: 6,
+    };
+    fakes.dbState.queuedSelectResponses.push([drizzleRowFor(entry)]);
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/assets/?sourceChain=ethereum&limit=1',
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { assets: Array<{ id: string }>; nextCursor?: string };
+    expect(body.assets).toHaveLength(1);
+    expect(body.assets[0]?.id).toBe(entry.id);
+    // Single-row page with limit=1 → page IS full → nextCursor set.
+    expect(body.nextCursor).toBe(entry.id);
+
+    const methods = fakes.dbState.callLog.map((c) => c.method);
+    expect(methods).toContain('select');
+    expect(methods).toContain('from');
+    expect(methods).toContain('where');
+    expect(methods).toContain('orderBy');
+    expect(methods).toContain('limit');
+  });
+
+  /* Empty page result from Drizzle — nextCursor OMITTED, not null,
+   * matching the route's `null → undefined` translation. */
+  it('GET /assets?limit=10 returns an empty page with no nextCursor key (Drizzle returns 0 rows)', async () => {
+    fakes.dbState.queuedSelectResponses.push([]);
+    const res = await app.inject({ method: 'GET', url: '/assets/?limit=10' });
+    expect(res.statusCode).toBe(200);
+    const body = res.json() as { assets: Array<unknown>; nextCursor?: string };
+    expect(body.assets).toEqual([]);
+    expect(body.nextCursor).toBeUndefined();
+    expect(Object.keys(body)).not.toContain('nextCursor');
+  });
+
+  /* Invalid sourceChain filter: same 400-vs-200 behavior as the
+   * Memory branch — the route-layer ChainEnum.safeParse runs BEFORE
+   * the repo call so the drizzle delegate is never reached for
+   * invalid input. */
+  it('GET /assets?sourceChain=bitcoin returns 400 (route-layer validation, parity with Memory)', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/assets/?sourceChain=bitcoin',
+    });
+    expect(res.statusCode).toBe(400);
+    // The drizzle select() / where() / orderBy() / limit() chain
+    // should NOT have been called — the bad-input early-return
+    // short-circuits before the repo delegation.
+    const methods = fakes.dbState.callLog.map((c) => c.method);
+    expect(methods).not.toContain('select');
   });
 });

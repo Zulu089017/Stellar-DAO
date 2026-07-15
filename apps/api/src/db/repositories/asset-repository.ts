@@ -1,7 +1,7 @@
-import { eq, sql } from 'drizzle-orm';
+import { and, asc, eq, gt, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 
-import type { AssetId, AssetRegistryEntry } from '@stellardao/shared';
+import type { AssetId, AssetRegistryEntry, SourceChainId } from '@stellardao/shared';
 
 import { bootstrapSchema, getDb, __closeDbForTest } from '../pool.js';
 import * as schema from '../schema.js';
@@ -15,11 +15,41 @@ import * as schema from '../schema.js';
 const keyFor = (source: AssetId): string =>
   `${source.chain}:${source.address.toLowerCase()}`;
 
+/**
+ * Result shape returned by `listByFilter`. Mirrors the pagination
+ * convention used by `transaction-repository.ts::listRecent`: a
+ * `nextCursor` of `null` means "this page is the last one (or
+ * matched exactly N rows from a larger table)"; the route layer
+ * translates `null` to JSON-omitted (`undefined`) for the wire.
+ *
+ * Idempotent for the case `entries.length === opts.limit` from a
+ * larger table — a follow-up call with the returned `nextCursor` as
+ * `?cursor=` will dispatch one more empty page. That extra round-
+ * trip is acceptable for the asset registry at realistic sizes
+ * (low-thousands max in testnet). If a future maintainer wants to
+ * eliminate it, switch to a `limit + 1` peek-and-slice strategy.
+ */
+export interface ListByFilterResult {
+  entries: AssetRegistryEntry[];
+  nextCursor: string | null;
+}
+
 interface AssetRepository {
   upsertBySource(
     input: Omit<AssetRegistryEntry, 'id'> & { id?: string },
   ): Promise<AssetRegistryEntry>;
   listAll(): Promise<AssetRegistryEntry[]>;
+  /**
+   * Cursor-paginated listing with optional chain filter. `cursor` is
+   * the `assets.id` value returned as `nextCursor` from the previous
+   * call; absent on first page. Results are sorted by `id` ASC so
+   * the cursor pointer `> prevLastId` is monotonic across calls.
+   */
+  listByFilter(opts: {
+    sourceChain?: SourceChainId;
+    limit: number;
+    cursor?: string;
+  }): Promise<ListByFilterResult>;
   findBySource(
     chain: AssetId['chain'],
     address: string,
@@ -62,6 +92,46 @@ class MemoryAssetRepository implements AssetRepository {
 
   async listAll(): Promise<AssetRegistryEntry[]> {
     return [...this.store.values()];
+  }
+
+  async listByFilter(opts: {
+    sourceChain?: SourceChainId;
+    limit: number;
+    cursor?: string;
+  }): Promise<ListByFilterResult> {
+    // Map.values() iterates in insertion order, which is NOT
+    // guaranteed to match the composite-id lexicographic order we
+    // expose to callers. Sort explicitly so the cursor pointer
+    // (`> prevLastId`) is deterministic across Memory + Drizzle
+    // impls — without this, a Memory-backed route could land rows
+    // in a different sequence than a Drizzle-backed route after
+    // upserts land in non-id order, which would surface as a
+    // cursor-stability regression only at runtime.
+    let filtered = [...this.store.values()];
+    // Bind the optional strings to narrowed locals BEFORE entering
+    // the `.filter()` callbacks. TypeScript does not narrow
+    // `opts.cursor` from `string | undefined` to `string` when the
+    // reference is INSIDE a higher-order `.filter()` callback, even
+    // after an `if (opts.cursor)` check on the line above. Without
+    // the local-bind form here, `tsc` reports TS18048 at the
+    // `opts.cursor` reference inside the callback.
+    const sourceChain = opts.sourceChain;
+    const cursor = opts.cursor;
+    if (sourceChain !== undefined) {
+      filtered = filtered.filter((e) => e.source.chain === sourceChain);
+    }
+    if (cursor !== undefined && cursor !== '') {
+      filtered = filtered.filter((e) => e.id > cursor);
+    }
+    filtered.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+    const slice = filtered.slice(0, opts.limit);
+    return {
+      entries: slice,
+      nextCursor:
+        slice.length === opts.limit && slice.length > 0
+          ? slice[slice.length - 1]!.id
+          : null,
+    };
   }
 
   async findBySource(
@@ -113,6 +183,51 @@ class DrizzleAssetRepository implements AssetRepository {
     return rows.map(rowToEntry);
   }
 
+  async listByFilter(opts: {
+    sourceChain?: SourceChainId;
+    limit: number;
+    cursor?: string;
+  }): Promise<ListByFilterResult> {
+    // Build the WHERE clause from whichever optional filters are
+    // present. drizzle's `and(...)` is a functional operator (not a
+    // chainable method), so the fluent chain recorded by the
+    // fakes Proxy is `[select, from, where?, orderBy, limit]` and
+    // the presence of `where` alone is sufficient evidence that the
+    // filter path was taken.
+    // Bind the optional strings to narrowed locals BEFORE the
+    // `eq(...)` / `gt(...)` argument evaluation. Inlining
+    // `if (opts.cursor) conds.push(gt(schema.assets.id, opts.cursor))`
+    // produces a TS18048 ("possibly undefined") on the `gt(...)`
+    // call site because TS's narrowing does not always propagate
+    // through a complex `if (cond) array.push(call(cond-arg))`
+    // expression. The local-bind form below keeps the narrowing
+    // explicit so the type-checker is happy and the runtime behavior
+    // is unchanged.
+    const sourceChain = opts.sourceChain;
+    const cursor = opts.cursor;
+    const conds = [];
+    if (sourceChain !== undefined) {
+      conds.push(eq(schema.assets.chain, sourceChain));
+    }
+    if (cursor !== undefined && cursor !== '') {
+      conds.push(gt(schema.assets.id, cursor));
+    }
+    const where = conds.length ? and(...conds) : undefined;
+    const baseQ = this.db.select().from(schema.assets);
+    const filteredQ = where ? baseQ.where(where) : baseQ;
+    const orderedQ = filteredQ.orderBy(asc(schema.assets.id));
+    const limitedQ = orderedQ.limit(opts.limit);
+    const rows = await limitedQ;
+    const entries = rows.map(rowToEntry);
+    return {
+      entries,
+      nextCursor:
+        entries.length === opts.limit && entries.length > 0
+          ? entries[entries.length - 1]!.id
+          : null,
+    };
+  }
+
   async findBySource(
     chain: AssetId['chain'],
     address: string,
@@ -148,6 +263,7 @@ let activeImpl: AssetRepository = new MemoryAssetRepository();
 export const assetRepository: AssetRepository = {
   upsertBySource: (...args) => activeImpl.upsertBySource(...args),
   listAll: () => activeImpl.listAll(),
+  listByFilter: (...args) => activeImpl.listByFilter(...args),
   findBySource: (...args) => activeImpl.findBySource(...args),
   __clearForTest: () => activeImpl.__clearForTest(),
 };

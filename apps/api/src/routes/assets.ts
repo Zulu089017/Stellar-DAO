@@ -24,10 +24,48 @@ const CreateAssetSchema = z.object({
 });
 
 export const assetRoutes = async (app: FastifyInstance): Promise<void> => {
-  app.get('/', async (): Promise<ListAssetsResponse> => {
-    const assets = await assetRepository.listAll();
+  /**
+   * Default page size + ceiling. Mirrors `transactions.ts` so the
+   * API surface is consistent across aggregated read endpoints;
+   * callers who attempt `?limit=999` get capped silently (the wire
+   * response shape is unchanged) rather than a 400.
+   */
+  const DEFAULT_LIMIT = 50;
+  const MAX_LIMIT = 200;
+
+  app.get<
+    { Querystring: { limit?: string; sourceChain?: string; cursor?: string } }
+  >('/', async (req, reply): Promise<ListAssetsResponse> => {
+    if (req.query.sourceChain !== undefined) {
+      const parsed = ChainEnum.safeParse(req.query.sourceChain);
+      if (!parsed.success) {
+        return reply.badRequest('unsupported sourceChain');
+      }
+    }
+    // Clamp `limit` to the [1, MAX_LIMIT] range so negative inputs
+    // (`?limit=-5`) or zero inputs (`?limit=0`) can't squeeze a
+    // negative `slice()` argument into the repo layer
+    // (`Array.prototype.slice(0, -5)` returns the first `N-5` rows,
+    // which is the OPPOSITE of "return zero rows"). Mirror the
+    // transactions.ts shape for cross-route parity, then add the
+    // Math.max(1, …) floor that transactions.ts is missing.
+    const requested = Number(req.query.limit ?? DEFAULT_LIMIT);
+    const limit = Math.max(
+      1,
+      Math.min(
+        Number.isFinite(requested) ? requested : DEFAULT_LIMIT,
+        MAX_LIMIT,
+      ),
+    );
+    const cursor = req.query.cursor ?? '';
+    const sourceChain = req.query.sourceChain as SourceChainId | undefined;
+    const { entries, nextCursor } = await assetRepository.listByFilter({
+      sourceChain,
+      limit,
+      cursor,
+    });
     return {
-      assets: assets.map((entry) => ({
+      assets: entries.map((entry) => ({
         id: entry.id,
         source: entry.source,
         wrapperToken: entry.wrapperToken,
@@ -35,6 +73,10 @@ export const assetRoutes = async (app: FastifyInstance): Promise<void> => {
         name: entry.name,
         decimals: entry.decimals,
       })),
+      // Translate repo-level `null` (last-page marker) to JS-undefined
+      // so JSON serialization drops the key entirely. Matches the
+      // optional-fields convention used by Transaction.sourceTxHash.
+      ...(nextCursor ? { nextCursor } : {}),
     };
   });
 
