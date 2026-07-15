@@ -62,4 +62,21 @@ export const eventQueue = {
   list(): Transaction[] {
     return [...queue.values()];
   },
+
+  /**
+   * Test-only: clears the underlying map so a spec's beforeEach can
+   * reset state without reaching into the private `queue` symbol.
+   * Mirrors the `__clearForTest` pattern on the API's
+   * `assetRepository` / `transactionRepository`.
+   *
+   * TODO(50-item backlog, sourceTxHash dedup): when source-chain
+   * receipt integration lands and the dedup key migrates from
+   * `${sourceChain}:${nonce}` to `sourceTxHash`, this method still
+   * only needs to `clear()` the map — the test-side concern doesn't
+   * care which key the production code uses, only that the reset is
+   * observable.
+   */
+  __clearForTest(): void {
+    queue.clear();
+  },
 };

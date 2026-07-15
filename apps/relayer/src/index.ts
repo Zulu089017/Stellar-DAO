@@ -1,8 +1,6 @@
-import crypto from 'node:crypto';
-
 import pino from 'pino';
 import { Keypair } from '@stellar/stellar-sdk';
-import { parseEnv, type SourceChainId, type Transaction } from '@stellardao/shared';
+import { parseEnv, type SourceChainId } from '@stellardao/shared';
 import {
   BridgeContract,
   buildLockDigest,
@@ -15,6 +13,7 @@ import { polygonWatcher } from './sources/polygon.js';
 import { detector } from './detector.js';
 import { eventQueue } from './state/event-queue.js';
 import { signer } from './operator/signer.js';
+import { handleLockEvent } from './operator/relay-pipeline.js';
 import type { LockEvent } from './sources/types.js';
 
 const log = pino({
@@ -23,32 +22,6 @@ const log = pino({
 });
 
 const env = parseEnv.api();
-
-/**
- * Build a `Transaction` envelope from a `LockEvent` + chain id.
- * Fills in the fields the API + dashboard expect (`id`, `type`,
- * `sourceChain`) and marks `sourceTxHash` / `stellarTxHash` as `null`
- * until the upstream systems populate them — the relayer's role here is
- * to track the in-flight attestation, not the source-chain/hash state.
- */
-function envelope(event: LockEvent, chain: SourceChainId): Transaction {
-  const now = new Date().toISOString();
-  return {
-    id: crypto.randomUUID(),
-    type: 'wrap',
-    sourceChain: chain,
-    sourceToken: event.sourceToken,
-    wrapperToken: event.wrapperToken,
-    recipient: event.recipient,
-    amount: event.amount,
-    nonce: event.nonce,
-    status: 'attesting',
-    sourceTxHash: null,
-    stellarTxHash: null,
-    createdAt: now,
-    updatedAt: now,
-  };
-}
 
 async function main() {
   log.info({ network: env.STELLAR_NETWORK }, 'StellarDAO relayer starting');
@@ -83,53 +56,28 @@ async function main() {
     }
   };
 
+  // Common deps shared by every chain's emit handler. `handleLockEvent`
+  // (in `./operator/relay-pipeline.ts`) takes this deps struct so the
+  // production wiring and the test seam (relay-pipeline.spec.ts) can
+  // share the exact same shape.
+  const pipelineDeps = {
+    eventQueue,
+    buildLockDigest,
+    signSecp256k1,
+    signer,
+    bridge,
+    sourceKeypair,
+    relayerPK: env.RELAYER_PUBLIC_KEY ?? '',
+    relayerSecretKey: env.RELAYER_SECRET_KEY,
+    networkPassphrase: env.STELLAR_NETWORK_PASSPHRASE,
+    sorobanRpcUrl: env.SOROBAN_RPC_URL,
+  };
+
   for (const chain of Object.keys(networkSources) as SourceChainId[]) {
     void detector(
       chain,
       async () => networkSources[chain](rpcUrlFor(chain)),
-      async (event: LockEvent) => {
-        log.info({ chain }, 'attesting lock event');
-
-        const tx = envelope(event, chain);
-        eventQueue.push(tx);
-
-        const digest = buildLockDigest({
-          sourceChain: chain,
-          sourceToken: event.sourceToken,
-          // `buildLockDigest` expects `wrapperToken` as a hex string and
-          // decodes it internally — passing a Buffer here was a type
-          // drift leftover from an earlier draft.
-          wrapperToken: event.wrapperToken,
-          recipient: event.recipient,
-          amount: event.amount,
-          // `nonce` is typed as Uint8Array (Buffer extends Uint8Array, so
-          // the assignment is valid and cheap to keep in Buffer form for
-          // hex-on-the-wire encoding).
-          nonce: Buffer.from(event.nonce, 'hex'),
-        });
-
-        const signature = env.RELAYER_SECRET_KEY
-          ? await signSecp256k1(digest, env.RELAYER_SECRET_KEY)
-          : new Uint8Array(64);
-
-        try {
-          const stellarTxHash = await signer.submitMintToBridge({
-            bridgeContract: bridge,
-            sourceKeypair,
-            relayerPK: env.RELAYER_PUBLIC_KEY ?? '',
-            payload: { ...event, sourceChain: chain },
-            signature,
-            networkPassphrase: env.STELLAR_NETWORK_PASSPHRASE,
-            sorobanRpcUrl: env.SOROBAN_RPC_URL,
-          });
-
-          eventQueue.updateById(chain, event.nonce, { status: 'minting', stellarTxHash });
-        } catch (err) {
-          const message = (err as Error).message;
-          log.error({ chain, err: message }, 'mint submission failed');
-          eventQueue.updateById(chain, event.nonce, { status: 'failed', error: message });
-        }
-      },
+      (event: LockEvent) => handleLockEvent(chain, event, pipelineDeps),
     );
   }
 }
