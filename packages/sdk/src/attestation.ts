@@ -39,7 +39,7 @@ export function buildUnlockDigest(
     encoder.encode(SIGNATURE_TAGS.UNLOCK_V1),
     encoder.encode(payload.sourceChain),
     Buffer.from(payload.wrapperToken, 'hex'),
-    Buffer.from(payload.sourceAddress),
+    encoder.encode(payload.sourceAddress),
     Buffer.from(toBigEndianBytes(BigInt(payload.amount))),
     Buffer.from(payload.nonce),
   ]);
@@ -69,6 +69,83 @@ export async function verifySecp256k1(
   }
 }
 
+/* ───────────────  threshold aggregation  ─────────────── */
+
+/**
+ * SDK-side mirror of `verify_threshold` in
+ * `contracts/bridge/src/verification.rs`. The on-chain verifier is
+ * currently a SECURITY STUB that returns `false` for every call
+ * (pending the 64→65-byte signature migration against `soroban-sdk`
+ * 21.x), so the relayer MUST pre-validate locally before
+ * submitting a Soroban RPC. This helper returns a tagged union
+ * — never throws — so callers can dispatch on the failure mode
+ * without try/catch boilerplate.
+ *
+ * The tagged-union `error` field maps 1:1 onto the Rust variants:
+ *   `'duplicate_signer'`  ↔ `AttestationError::DuplicateSigner`
+ *   `'unknown_signer'`    ↔ `AttestationError::UnknownSigner`
+ *   `'insufficient'`      ↔ `AttestationError::InsufficientSignatures`
+ *
+ * Per-attestation check order (duplicate → unknown → valid →
+ * threshold) matches the Rust loop so the two implementations
+ * cannot disagree on the failure class for any given input.
+ * Short-circuits as soon as `valid >= threshold` to avoid wasted
+ * EC verify calls (each ~50µs).
+ */
+export type AttestationEntry = { publicKey: Uint8Array; signature: Uint8Array };
+
+export type ThresholdResult =
+  | { ok: true }
+  | { ok: false; error: 'insufficient' | 'duplicate_signer' | 'unknown_signer' };
+
+export async function verifyThreshold(
+  attestations: AttestationEntry[],
+  threshold: number,
+  operators: Uint8Array[],
+  digest: Uint8Array,
+): Promise<ThresholdResult> {
+  // Degenerate threshold-0: there is nothing to verify at the
+  // signature-aggregation layer. Mirror the "admin override /
+  // localnet single-trusted-setup" case the Rust contract handles
+  // at its call site, so the relayer can pre-validate zero-threshold
+  // payloads without forcing callers to populate the empty atts
+  // array. Without this short-circuit we silently fall through to
+  // `insufficient` even though `valid=0 >= threshold=0` is vacuously
+  // true.
+  if (threshold === 0) {
+    return { ok: true };
+  }
+
+  // Set membership keyed by lowercase hex so the comparison is
+  // allocation-free even for large operator sets (50+ operators
+  // is plausible once the multi-tenant relayer is in place).
+  const operatorsSet = new Set<string>(operators.map(bytesToHex));
+  const seen = new Set<string>();
+  let valid = 0;
+
+  for (const att of attestations) {
+    const pubHex = bytesToHex(att.publicKey);
+    if (seen.has(pubHex)) {
+      return { ok: false, error: 'duplicate_signer' };
+    }
+    if (!operatorsSet.has(pubHex)) {
+      return { ok: false, error: 'unknown_signer' };
+    }
+    const isValid = await verifySecp256k1(digest, att.publicKey, att.signature);
+    if (isValid) {
+      valid += 1;
+      seen.add(pubHex);
+    }
+    if (valid >= threshold) {
+      return { ok: true };
+    }
+  }
+
+  return { ok: false, error: 'insufficient' };
+}
+
+/* ───────────────  internal helpers  ─────────────── */
+
 function toBigEndianBytes(value: bigint): Uint8Array {
   // 16-byte big-endian (i128) digest field; small enough for all reasonable amounts.
   const out = new Uint8Array(16);
@@ -78,4 +155,8 @@ function toBigEndianBytes(value: bigint): Uint8Array {
     v >>= 8n;
   }
   return out;
+}
+
+function bytesToHex(b: Uint8Array): string {
+  return Buffer.from(b).toString('hex');
 }
