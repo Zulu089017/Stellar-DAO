@@ -17,7 +17,11 @@ import {
   assetRepository,
 } from '../db/repositories/asset-repository.js';
 import { __resetContractInstances } from '../soroban/index.js';
-import { __resetEventBusForTest } from '../sse/event-bus.js';
+import {
+  __resetEventBusForTest,
+  subscribeAssets,
+  type AssetEvent,
+} from '../sse/event-bus.js';
 
 /* ─────────────────── env stubs (module-top, hoisted before any import reads process.env) ─────────────────── */
 vi.stubEnv('STELLAR_NETWORK', 'TESTNET');
@@ -140,6 +144,8 @@ function drizzleRowFor(entry: AssetRegistryEntry): Record<string, unknown> {
 describe('asset routes (Memory impl)', () => {
   let app: Awaited<ReturnType<typeof createServer>>;
   let simulateAndSubmitSpy: MockInstance;
+  let assetEvents: AssetEvent[];
+  let unsubscribeAssets: (() => void) | undefined;
 
   beforeEach(async () => {
     __resetEnvCache();
@@ -151,8 +157,11 @@ describe('asset routes (Memory impl)', () => {
       .spyOn(FactoryContract.prototype, 'simulateAndSubmit')
       .mockResolvedValue('a'.repeat(64));
     app = await createServer();
+    assetEvents = [];
+    unsubscribeAssets = subscribeAssets((evt) => assetEvents.push(evt));
   });
   afterEach(async () => {
+    unsubscribeAssets?.();
     simulateAndSubmitSpy.mockRestore();
     if (app) await app.close();
     await __resetAssetRepoForTest();
@@ -340,6 +349,114 @@ describe('asset routes (Memory impl)', () => {
       cursor = body.nextCursor;
     }
     expect(collected).toEqual(['walk:a', 'walk:b', 'walk:c', 'walk:d', 'walk:e']);
+  });
+
+  /* POST /assets fires `asset-update` with `updateType: 'registered'`
+   * so the dashboard's AssetsLiveTable can refresh the listing and
+   * show the new pre-stage row in real-time. The `updateType`
+   * discriminator is the bridge between the route layer and the
+   * `AssetEvent['updateType']` type-level union — without it, a
+   * future consumer couldn't tell registered rows from filled rows
+   * apart. */
+  it('POST /assets broadcasts updateType=\'registered\' via the in-process event bus (pre-stage, wrapperToken still empty)', async () => {
+    const developerPK = Keypair.random().publicKey();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/assets/',
+      headers: { 'x-developer-public-key': developerPK },
+      payload: {
+        source: {
+          chain: 'ethereum',
+          address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        },
+        name: 'Ether Echo',
+        symbol: 'ECH',
+        decimals: 18,
+      },
+    });
+    expect(res.statusCode).toBe(202);
+
+    const registered = assetEvents.filter((e) => e.updateType === 'registered');
+    expect(registered).toHaveLength(1);
+    const evt = registered[0]!;
+    expect(evt.entry.wrapperToken).toBe(''); // pre-stage: still empty
+    expect(evt.entry.source).toEqual({
+      chain: 'ethereum',
+      address: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    });
+    expect(evt.entry.symbol).toBe('ECH');
+    expect(evt.entry.name).toBe('Ether Echo');
+    expect(evt.entry.decimals).toBe(18);
+    // The composite-id form `chain:lowercase(address)` is what the
+    // repo's `keyFor` builds; the bus envelope carries the SAME id
+    // shape so a consumer that uses `entry.id` for a React `key`
+    // dedupes against the next `listAll` response without remapping.
+    expect(evt.entry.id).toBe(
+      'ethereum:0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    );
+  });
+
+  /* When the factory-confirmation webhook fires later
+   * (`updateType: 'wrapperToken-filled'`), the two update types
+   * stack cleanly in the bus — a single test scenario that does both
+   * POSTs back-to-back should produce exactly one of each, in order,
+   * on the same entry. Locks the cross-producer contract: both
+   * producers share the bus but never collide on `updateType`. The
+   * 56-char `'C' + 'A'.repeat(55)` literal is a valid Soroban
+   * contract id under the strict regex (the route schema's
+   * `SOROBAN_CONTRACT_ID` test only checks the alphabet + length,
+   * not the strkey CRC); using a real `StrKey.encodeContract` would
+   * add an SDK round-trip this spec doesn't otherwise need. */
+  it('POST /assets then POST /webhooks/factory/confirm produces exactly one of each updateType in the bus (cross-producer ordering)', async () => {
+    const developerPK = Keypair.random().publicKey();
+    const sourceAddress = '0xcccccccccccccccccccccccccccccccccccccccc';
+    const fakeWrapperToken = 'C' + 'A'.repeat(55);
+
+    // 1. POST /assets → broadcasts exactly one 'registered' event.
+    const postRes = await app.inject({
+      method: 'POST',
+      url: '/assets/',
+      headers: { 'x-developer-public-key': developerPK },
+      payload: {
+        source: { chain: 'ethereum', address: sourceAddress },
+        name: 'Cross Producer',
+        symbol: 'CRS',
+        decimals: 6,
+      },
+    });
+    expect(postRes.statusCode).toBe(202);
+    expect(assetEvents.filter((e) => e.updateType === 'registered')).toHaveLength(1);
+    expect(assetEvents.filter((e) => e.updateType === 'wrapperToken-filled')).toHaveLength(0);
+
+    // 2. POST /webhooks/factory/confirm → broadcasts exactly one
+    //    'wrapperToken-filled' event on the SAME entry. The pre-stage
+    //    already exists (POST /assets wrote it), so no 404.
+    const confirmRes = await app.inject({
+      method: 'POST',
+      url: '/webhooks/factory/confirm',
+      payload: {
+        sourceChain: 'ethereum',
+        sourceToken: sourceAddress,
+        wrapperToken: fakeWrapperToken,
+      },
+    });
+    expect(confirmRes.statusCode).toBe(202);
+
+    // 3. Final bus state: exactly one of each updateType, both
+    //    carrying the same `entry.id` (the composite key
+    //    `ethereum:0xccc...`). Locks the cross-producer contract:
+    //    both producers share the bus but never collide on
+    //    `updateType` and a consumer can correlate the two
+    //    transitions via the shared entry.id.
+    const registered = assetEvents.filter((e) => e.updateType === 'registered');
+    const filled = assetEvents.filter((e) => e.updateType === 'wrapperToken-filled');
+    expect(registered).toHaveLength(1);
+    expect(filled).toHaveLength(1);
+    expect(registered[0]!.entry.id).toBe(filled[0]!.entry.id);
+    // The 'registered' event carries the pre-stage (empty wrapperToken);
+    // the 'wrapperToken-filled' event carries the now-populated value.
+    expect(registered[0]!.entry.wrapperToken).toBe('');
+    expect(filled[0]!.entry.wrapperToken).toBe(fakeWrapperToken);
   });
 });
 

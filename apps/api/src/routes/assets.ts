@@ -10,6 +10,7 @@ import type {
 
 import { factory } from '../soroban/index.js';
 import { assetRepository } from '../db/repositories/asset-repository.js';
+import { broadcastAssetUpdate } from '../sse/event-bus.js';
 
 const ChainEnum = z.enum(['ethereum', 'solana', 'polygon']);
 
@@ -141,6 +142,15 @@ export const assetRoutes = async (app: FastifyInstance): Promise<void> => {
       name,
       decimals,
     });
+
+    // Broadcast the pre-stage registration so the dashboard's
+    // AssetsLiveTable can call `router.refresh()` and surface the new
+    // row in real-time. The `updateType: 'registered'` discriminator
+    // is distinct from `'wrapperToken-filled'` (fired by the factory-
+    // confirmation webhook when the slot is filled) so a future
+    // consumer that wants to flash a "pending" badge on registered
+    // rows but a "deployed" badge on filled rows can filter cleanly.
+    broadcastAssetUpdate(entry, 'registered');
 
     const body: CreateAssetResponse = { wrapperToken: entry.wrapperToken, txHash };
     reply.code(202).send(body);

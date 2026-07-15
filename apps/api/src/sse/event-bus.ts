@@ -6,12 +6,19 @@
  *     from the wrap route + relayer + future webhooks. The
  *     dashboard's TransactionFeed prepends the received `Transaction`
  *     onto its live feed.
- *   - `asset-update` — fired by `POST /webhooks/factory/confirm` when
- *     the on-chain wrapper-token contract id (previously empty in
- *     the pre-stage) is filled in. The dashboard's AssetRow flips
- *     from "pre-stage" to "deployed" once the event arrives.
- *     `POST /assets` does NOT currently broadcast — initial load
- *     still relies on the synchronous GET /assets response.
+ *   - `asset-update` — fired by TWO producers on the asset lifecycle:
+ *       * `POST /assets` fires `updateType: 'registered'` once the
+ *         pre-stage entry is upserted (the `wrapperToken` slot is
+ *         still empty at this point).
+ *       * `POST /webhooks/factory/confirm` fires
+ *         `updateType: 'wrapperToken-filled'` when the on-chain
+ *         wrapper-token contract id fills the empty slot.
+ *     The dashboard's AssetsLiveTable calls `router.refresh()` on
+ *     every asset-update event so both lifecycle transitions surface
+ *     on the `/assets` page without polling. The `updateType`
+ *     discriminator lets future consumers (e.g. a dedicated
+ *     `AssetTable` row-state flip component) react differently per
+ *     transition without parsing the entry shape.
  *
  * Why an EventEmitter instead of a real broker (Redis pub/sub, NATS):
  * the SSE relay only has to back a single Fastify process under
@@ -30,13 +37,18 @@ export type TransactionEvent = {
 
 export type AssetEvent = {
   entry: AssetRegistryEntry;
-  // Currently only `'wrapperToken-filled'` is emitted (by the
-  // factory-confirmation webhook handler in `routes/webhooks.ts`).
-  // The parameter stays on the signature so a future broadcaster
-  // (e.g. a `POST /assets` change that surfaces initial registration
-  // through SSE) can route through the same channel without
-  // breaking the spec contract.
-  updateType: 'wrapperToken-filled';
+  // Two transition kinds, both currently emitted:
+  //   * `'registered'`           — `POST /assets` upserted a new
+  //                                pre-stage entry (`wrapperToken`
+  //                                is `''` at this point).
+  //   * `'wrapperToken-filled'`  — `POST /webhooks/factory/confirm`
+  //                                filled the pre-stage slot with
+  //                                the on-chain contract id.
+  // The union is closed at the type level so a future broadcaster
+  // can't silently invent a third variant without a consumer-side
+  // update — adding one requires widening both the type and the
+  // SSE-bridge enum docs in `horizon-bridge.ts` together.
+  updateType: 'registered' | 'wrapperToken-filled';
 };
 
 type TxListener = (event: TransactionEvent) => void;
@@ -62,14 +74,16 @@ export const subscribeTransactions = (handler: TxListener): (() => void) => {
 /* ───────────────────── asset-update channel ─────────────────────── */
 
 /**
- * Push an asset-registry slot-fill update to every connected
- * subscriber. `updateType` defaults to the only currently-emitted
- * variant (`'wrapperToken-filled'`) so the single producer (the
- * factory-confirmation webhook) doesn't have to pass it explicitly.
+ * Push an asset-registry lifecycle update to every connected
+ * subscriber. `updateType` is REQUIRED (no default) so every
+ * producer is forced to declare which transition it's firing — a
+ * silent `updateType` default would let a new producer pick up the
+ * wrong variant by accident and break consumers that filter on the
+ * discriminator.
  */
 export const broadcastAssetUpdate = (
   entry: AssetRegistryEntry,
-  updateType: AssetEvent['updateType'] = 'wrapperToken-filled',
+  updateType: AssetEvent['updateType'],
 ): void => {
   emitter.emit('asset-update', { entry, updateType });
 };
