@@ -45,7 +45,6 @@ Thumbs.db
 
 # Rust / Soroban
 contracts/**/target/
-contracts/**/Cargo.lock
 contracts/**/*.wasm
 contracts/**/*.wat
 
