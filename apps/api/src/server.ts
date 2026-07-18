@@ -27,6 +27,7 @@ import { webhookRoutes } from './routes/webhooks.js';
 import { governanceRoutes } from './routes/governance.js';
 import { analyticsRoutes } from './routes/analytics.js';
 import { registerSseBridge } from './sse/horizon-bridge.js';
+import { registerGovernanceSse } from './sse/governance-bridge.js';
 import { rateLimitPlugin } from './middleware/rate-limit.js';
 import { apiKeyAuthPlugin } from './middleware/api-key-auth.js';
 import { sanitizePlugin } from './middleware/sanitize.js';
@@ -99,6 +100,7 @@ app.decorate(
   await app.register(analyticsRoutes, { prefix: '/' });
 
   await registerSseBridge(app);
+  await registerGovernanceSse(app);
 
   return app;
 };
