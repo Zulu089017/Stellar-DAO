@@ -24,7 +24,11 @@ import { bridgeRoutes } from './routes/bridge.js';
 import { healthRoutes } from './routes/health.js';
 import { transactionRoutes } from './routes/transactions.js';
 import { webhookRoutes } from './routes/webhooks.js';
+import { governanceRoutes } from './routes/governance.js';
+import { analyticsRoutes } from './routes/analytics.js';
 import { registerSseBridge } from './sse/horizon-bridge.js';
+import { rateLimitPlugin } from './middleware/rate-limit.js';
+import { apiKeyAuthPlugin } from './middleware/api-key-auth.js';
 
 export type ServerOptions = {
   logger?: boolean;
@@ -81,11 +85,16 @@ app.decorate(
   await initAssetRepository(env.DATABASE_URL);
   await initTransactionRepository(env.DATABASE_URL);
 
+  await app.register(rateLimitPlugin);
+  await app.register(apiKeyAuthPlugin);
+
   await app.register(healthRoutes, { prefix: '/health' });
   await app.register(assetRoutes, { prefix: '/assets' });
   await app.register(bridgeRoutes, { prefix: '/bridge' });
   await app.register(transactionRoutes, { prefix: '/transactions' });
   await app.register(webhookRoutes, { prefix: '/webhooks' });
+  await app.register(governanceRoutes, { prefix: '/governance' });
+  await app.register(analyticsRoutes, { prefix: '/' });
 
   await registerSseBridge(app);
 

@@ -6,6 +6,8 @@ import './globals.css';
 import { Providers } from './providers';
 
 import { TopNav } from '@/components/nav/top-nav';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { ToastContainer } from '@/components/toast';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
@@ -29,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen bg-aurora-gradient text-stellar-cloud">
         <Providers>
           <TopNav />
+          <ThemeToggle />
           <main className="mx-auto max-w-7xl px-6 pb-24 pt-10 lg:px-10">
             {children}
           </main>
@@ -36,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             StellarDAO is an open-source scaffold — never commit funds; always verify
             contract IDs against the latest release.
           </footer>
+          <ToastContainer />
         </Providers>
       </body>
     </html>

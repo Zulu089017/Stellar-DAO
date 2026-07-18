@@ -12,7 +12,7 @@
 //! time — typically the governance contract itself after deployment).
 
 use soroban_sdk::{
-    contract, contractimpl, contracttype, panic_with_error, Address, Env, Map, Symbol,
+    contract, contractimpl, contracttype, panic_with_error, Address, Bytes, Env, Symbol,
 };
 
 mod error;
@@ -122,8 +122,8 @@ impl GovernanceToken {
             .unwrap_or_else(|| panic_with_error!(env, GovTokenError::Overflow));
         env.storage().instance().set(&DataKey::TotalSupply, &supply);
 
-        // After mint, move the delegate's voting power forward.
-        Self::_move_delegate_votes(env.clone(), Address::from_str(&env, &to.to_string()), Address::from_str(&env, &to.to_string()), old_balance, new_balance);
+        // After mint, move the delegate's voting power forward (mint is self-delegated).
+        Self::_write_checkpoint(&env, &to, new_balance);
 
         env.events().publish(
             (Symbol::new(&env, "transfer"), Symbol::new(&env, "Mint")),
@@ -146,7 +146,7 @@ impl GovernanceToken {
         env.storage().persistent().set(&from, &from_balance);
         env.storage().persistent().set(&to, &to_balance);
 
-        // Move voting power.
+        // Move voting power to new delegates.
         Self::_move_delegate_votes(env.clone(), from.clone(), to.clone(), from_balance + amount, to_balance - amount);
 
         env.events().publish(
@@ -161,16 +161,6 @@ impl GovernanceToken {
         owner.require_auth();
 
         env.storage().persistent().set(&(owner.clone(), spender.clone()), &amount);
-        // Store expiration in a separate key to avoid tuple nesting issues.
-        let mut exp_key = soroban_sdk::Bytes::new(&env);
-        exp_key.push_back(b'a');
-        exp_key.push_back(b'l');
-        exp_key.push_back(b'l');
-        exp_key.push_back(b'o');
-        exp_key.push_back(b'w');
-        exp_key.append(&soroban_sdk::Bytes::from_slice(&env, &owner.to_string().as_bytes()));
-        exp_key.append(&soroban_sdk::Bytes::from_slice(&env, &spender.to_string().as_bytes()));
-        env.storage().persistent().set(&exp_key, &expiration_ledger);
 
         env.events().publish(
             (Symbol::new(&env, "approve"), Symbol::new(&env, "Approve")),
@@ -220,8 +210,8 @@ impl GovernanceToken {
 
         let balance = Self::balance(env.clone(), delegator.clone());
 
-        // Remove votes from old delegate.
-        if current_delegate != Address::from_str(&env, &delegator.to_string()) {
+        // Remove votes from old delegate if not self-delegating.
+        if current_delegate != delegator {
             Self::_write_checkpoint(
                 &env,
                 &current_delegate,
@@ -229,8 +219,8 @@ impl GovernanceToken {
             );
         }
 
-        // Add votes to new delegate.
-        if to != Address::from_str(&env, &delegator.to_string()) {
+        // Add votes to new delegate if not self-delegating.
+        if to != delegator {
             Self::_write_checkpoint(
                 &env,
                 &to,
@@ -339,21 +329,23 @@ impl GovernanceToken {
         );
     }
 
-    fn _move_delegate_votes(env: Env, from: Address, to: Address, from_old_balance: i128, to_old_balance: i128) {
+    fn _move_delegate_votes(env: Env, from: Address, to: Address, _from_old_balance: i128, _to_old_balance: i128) {
         let from_delegate = Self::_delegate_of(&env, &from);
         let to_delegate = Self::_delegate_of(&env, &to);
 
         let from_balance = Self::balance(env.clone(), from.clone());
         let to_balance = Self::balance(env.clone(), to.clone());
 
-        // Adjust from-delegate.
+        // Adjust from-delegate's voting power if delegation is active.
         if from_delegate != from {
-            Self::_write_checkpoint(&env, &from_delegate, Self::get_current_votes(env.clone(), from_delegate.clone()) - (from_old_balance - from_balance));
+            let current = Self::get_current_votes(env.clone(), from_delegate.clone());
+            Self::_write_checkpoint(&env, &from_delegate, current - (from_balance + _from_old_balance - from_balance) + from_balance);
         }
 
-        // Adjust to-delegate.
+        // Adjust to-delegate's voting power if delegation is active.
         if to_delegate != to {
-            Self::_write_checkpoint(&env, &to_delegate, Self::get_current_votes(env.clone(), to_delegate.clone()) + (to_balance - to_old_balance));
+            let current = Self::get_current_votes(env.clone(), to_delegate.clone());
+            Self::_write_checkpoint(&env, &to_delegate, current + to_balance - _to_old_balance);
         }
     }
 }
