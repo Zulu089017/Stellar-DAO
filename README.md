@@ -44,9 +44,12 @@ stellardao/
 │   ├── relayer/    Node watcher        (off-chain cross-chain orchestrator)
 │   └── web/        Next.js 15 frontend (real-time wrap dashboard)
 ├── contracts/
-│   ├── bridge/         verify attestations, route to wrapper-token
-│   ├── factory/        registry + deploy new wrapper-tokens
-│   └── wrapper-token/  capped-mint template the factory clones
+│   ├── bridge/            verify attestations, route to wrapper-token
+│   ├── factory/           registry + deploy new wrapper-tokens
+│   ├── wrapper-token/     capped-mint template the factory clones
+│   ├── governance-token/  SEP-41 token with delegation and checkpointing
+│   ├── governance/        proposal creation, voting, and execution
+│   └── timelock/          delayed execution for governance safety
 ├── packages/
 │   ├── shared/         cross-package types, constants, env utils
 │   ├── sdk/            high-level Stellar client (TxBuilder, asset ops)
@@ -54,12 +57,23 @@ stellardao/
 │   ├── ui/             shared React components
 │   ├── eslint-config/  shareable ESLint preset
 │   └── tsconfig/       shareable tsconfig presets
-├── scripts/             deploy.ts, generate-bindings.ts
-├── docs/
+├── scripts/             deploy.ts, generate-bindings.ts, verify.ts
+├── docs/                ARCHITECTURE.md, SECURITY.md, API.md, SETUP.md, CONTRIBUTING.md
 ├── turbo.json
 ├── pnpm-workspace.yaml
 └── package.json
 ```
+
+## Features
+
+- **Cross-chain wrapping**: Lock ERC-20/SPL/Polygon tokens → mint wrapped tokens on Stellar
+- **DAO Governance**: On-chain proposals, voting, delegation, and timelocked execution
+- **Real-time dashboard**: Horizon SSE-powered live transaction and asset feed
+- **Bridge security**: Multi-sig verifier set, pause/unpause, nonce replay protection
+- **Protocol fees**: Configurable fee structure in basis points
+- **Multi-wallet support**: Freighter and Albedo browser extensions
+- **API**: REST + SSE with rate limiting, API key auth, and input sanitization
+- **Analytics**: TVL, volume, and chain-level protocol metrics
 
 ## Quickstart
 
