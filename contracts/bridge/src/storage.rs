@@ -8,6 +8,11 @@ pub enum DataKey {
     Admin,
     Operators,
     Threshold,
+    Paused,
+    FeeBps,
+    FeeCollector,
+    EmergencyAdmin,
+    EmergencyTimelock,
 }
 
 /// Inbound payload: a user locked `amount` of `source_token` on

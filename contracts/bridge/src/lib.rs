@@ -67,9 +67,70 @@ impl Bridge {
         env.storage()
             .instance()
             .set(&DataKey::Threshold, &threshold);
+        env.storage().instance().set(&DataKey::Paused, &false);
+        env.storage().instance().set(&DataKey::FeeBps, &0u32);
+        env.storage()
+            .instance()
+            .set(&DataKey::FeeCollector, &admin);
+        env.storage().instance().set(&DataKey::EmergencyAdmin, &admin);
+        env.storage()
+            .instance()
+            .set(&DataKey::EmergencyTimelock, &0u32);
         env.storage()
             .instance()
             .set(&DataKey::Initialized, &true);
+    }
+
+    // ── Pause / Unpause ──────────────────────────────────────
+
+    /// Pause all mint and burn operations. Admin only.
+    pub fn pause(env: Env) {
+        let admin: Address = env.storage().instance().get(&DataKey::Admin).expect("bridge not initialized");
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Paused, &true);
+        env.events().publish(
+            (Symbol::new(&env, "bridge"), Symbol::new(&env, "Paused")),
+            (),
+        );
+    }
+
+    /// Unpause the bridge. Admin only.
+    pub fn unpause(env: Env) {
+        let admin: Address = env.storage().instance().get(&DataKey::Admin).expect("bridge not initialized");
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::Paused, &false);
+        env.events().publish(
+            (Symbol::new(&env, "bridge"), Symbol::new(&env, "Unpaused")),
+            (),
+        );
+    }
+
+    pub fn paused(env: Env) -> bool {
+        env.storage().instance().get(&DataKey::Paused).unwrap_or(false)
+    }
+
+    // ── Fee management ───────────────────────────────────────
+
+    /// Set protocol fee in basis points. 100 = 1%. Admin only.
+    pub fn set_fee(env: Env, fee_bps: u32) {
+        let admin: Address = env.storage().instance().get(&DataKey::Admin).expect("bridge not initialized");
+        admin.require_auth();
+        assert!(fee_bps <= 1000, "fee cannot exceed 10%");
+        env.storage().instance().set(&DataKey::FeeBps, &fee_bps);
+    }
+
+    pub fn fee_bps(env: Env) -> u32 {
+        env.storage().instance().get(&DataKey::FeeBps).unwrap_or(0u32)
+    }
+
+    pub fn fee_collector(env: Env) -> Address {
+        env.storage().instance().get(&DataKey::FeeCollector).expect("bridge not initialized")
+    }
+
+    pub fn set_fee_collector(env: Env, collector: Address) {
+        let admin: Address = env.storage().instance().get(&DataKey::Admin).expect("bridge not initialized");
+        admin.require_auth();
+        env.storage().instance().set(&DataKey::FeeCollector, &collector);
     }
 
     pub fn admin(env: Env) -> Address {
@@ -132,6 +193,10 @@ impl Bridge {
         attestations: Vec<(BytesN<32>, BytesN<64>)>,
     ) {
         relayer.require_auth();
+
+        // Pause check: reject all operations when paused.
+        let paused: bool = env.storage().instance().get(&DataKey::Paused).unwrap_or(false);
+        assert!(!paused, "bridge is paused");
 
         // CRITICAL: verify signatures BEFORE persisting the nonce. The
         // previous ordering let any caller spamm pre-computed payloads to
@@ -202,6 +267,10 @@ impl Bridge {
         attestations: Vec<(BytesN<32>, BytesN<64>)>,
     ) {
         relayer.require_auth();
+
+        // Pause check: reject all operations when paused.
+        let paused: bool = env.storage().instance().get(&DataKey::Paused).unwrap_or(false);
+        assert!(!paused, "bridge is paused");
 
         Self::verify_unlock(env.clone(), &payload, &attestations);
         assert!(
