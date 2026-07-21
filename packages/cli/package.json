@@ -12,7 +12,8 @@
     "cli": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
-    "clean": "rm -rf dist .turbo"
+    "clean": "rm -rf dist .turbo",
+    "build": "tsc --project tsconfig.json"
   },
   "dependencies": {},
   "devDependencies": {
