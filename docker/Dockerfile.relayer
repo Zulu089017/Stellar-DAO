@@ -1,0 +1,29 @@
+# ── StellarDAO Relayer Dockerfile ──────────────────────────────
+# Multi-stage build for the cross-chain relayer service.
+# Watches Ethereum, Solana, and Polygon for Lock events.
+
+FROM node:20.11.0-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+WORKDIR /app
+
+FROM base AS deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.json .npmrc ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/sdk/package.json packages/sdk/
+COPY apps/relayer/package.json apps/relayer/
+RUN pnpm install --frozen-lockfile --filter @stellardao/relayer...
+
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/relayer/node_modules ./apps/relayer/node_modules
+COPY . .
+RUN pnpm --filter @stellardao/relayer build
+
+FROM base AS runner
+ENV NODE_ENV=production
+COPY --from=builder /app/apps/relayer/dist ./apps/relayer/dist
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/relayer/node_modules ./apps/relayer/node_modules
+COPY --from=deps /app/packages ./packages
+
+CMD ["node", "apps/relayer/dist/index.js"]
