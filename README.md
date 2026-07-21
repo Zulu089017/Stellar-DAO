@@ -1,5 +1,11 @@
 # StellarDAO
 
+[![CI](https://github.com/Zulu089017/Stellar-DAO/actions/workflows/ci.yml/badge.svg)](https://github.com/Zulu089017/Stellar-DAO/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![pnpm 9+](https://img.shields.io/badge/pnpm-9%2B-orange)](https://pnpm.io)
+[![Node 20.11+](https://img.shields.io/badge/node-20.11%2B-green)](https://nodejs.org)
+[![Soroban 21.7.7](https://img.shields.io/badge/soroban--sdk-21.7.7-purple)](https://soroban.stellar.org)
+
 > A cross-chain wrapping middleware for the Stellar ecosystem.
 > Spin up wrapped versions of your Ethereum, Solana, or Polygon tokens on Stellar in minutes — leveraging Stellar's ultra-low fees and Horizon-powered real-time settlement.
 
@@ -102,9 +108,24 @@ pnpm --filter @stellardao/relayer dev  # relayer only
 
 For deeper context, see:
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
-- [`docs/SETUP.md`](docs/SETUP.md)
-- [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md)
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design and contract responsibilities
+- [`docs/SETUP.md`](docs/SETUP.md) — environment setup and daily workflow
+- [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — contribution guide, milestones, and grant workflow
+- [`docs/SECURITY.md`](docs/SECURITY.md) — threat model and audit checklist
+- [`docs/API.md`](docs/API.md) — REST + SSE API reference
+- [`docs/CRITERIA-FRONTEND.md`](docs/CRITERIA-FRONTEND.md) — frontend quality gates
+- [`docs/CRITERIA-CONTRACTS.md`](docs/CRITERIA-CONTRACTS.md) — smart contract quality gates
+- [`docs/CRITERIA-BACKEND.md`](docs/CRITERIA-BACKEND.md) — backend quality gates
+- [`docs/GRANT-READINESS.md`](docs/GRANT-READINESS.md) — grant platform readiness (Drips Network, GrantFox)
+
+## Grant Platforms
+
+StellarDAO is built for participation on open-source grant and bounty platforms:
+
+| Platform | Focus | Status |
+|----------|-------|--------|
+| [Drips Network](https://drips.network) | Open-source funding streams + Drips Wave bounties | ✅ Ready |
+| [GrantFox](https://grantfox.xyz) | Stellar/Soroban ecosystem bounties | ✅ Ready |
 
 ## License
 
