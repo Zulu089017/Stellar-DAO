@@ -1,0 +1,167 @@
+# ── StellarDAO E2E test workflow ───────────────────────────────
+# Runs Playwright tests against the Next.js dashboard on every PR
+# and push to main. Viewports are sharded across a matrix so
+# desktop, mobile and tablet checks run in parallel.
+#
+# Secrets required:
+#   TURBO_TOKEN, TURBO_TEAM — optional (remote build cache)
+#
+# To run on preview deployments instead of the built app, set the
+# PLAYWRIGHT_BASE_URL repository variable to the preview URL and
+# the workflow will skip the build + server steps and test
+# directly against that external URL.
+# ────────────────────────────────────────────────────────────────
+
+name: e2e
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Build (only when not targeting a preview deployment) ──────
+  build:
+    name: Build Next.js
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Skip when PLAYWRIGHT_BASE_URL points to a preview deployment
+    # — tests will run against that external URL instead.
+    if: ${{ vars.PLAYWRIGHT_BASE_URL == '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.11.0
+          cache: pnpm
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build Next.js
+        id: build
+        working-directory: apps/web
+        run: |
+          NEXT_PUBLIC_DEMO_MODE=true \
+          NEXT_PUBLIC_API_BASE_URL= \
+          npx next build
+
+      - name: Upload .next build cache
+        if: ${{ steps.build.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: apps/web/.next
+          retention-days: 1
+          include-hidden-files: true
+
+  # ── E2E test matrix ──────────────────────────────────────────
+  test:
+    name: E2E (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [build]
+    # Run even when build is skipped (PLAYWRIGHT_BASE_URL is set)
+    if: ${{ always() && !cancelled() }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - desktop-chrome
+          - mobile-chrome
+          - tablet-chrome
+
+    env:
+      # Override the Playwright base URL for preview deployments.
+      # When unset, Playwright's webServer starts the built app.
+      PLAYWRIGHT_BASE_URL: ${{ vars.PLAYWRIGHT_BASE_URL || '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.11.0
+          cache: pnpm
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/share/pnpm/store
+          key: pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Download .next build cache
+        uses: actions/download-artifact@v4
+        with:
+          name: next-build
+          path: apps/web/.next
+        continue-on-error: true
+
+      - name: Install Playwright system deps
+        working-directory: apps/web
+        run: npx playwright install-deps chromium
+
+      - name: Install Playwright Chromium
+        working-directory: apps/web
+        run: npx playwright install chromium
+
+      - name: Run E2E tests (${{ matrix.project }})
+        working-directory: apps/web
+        run: npx playwright test --project=${{ matrix.project }}
+        env:
+          NODE_ENV: test
+          NEXT_PUBLIC_DEMO_MODE: 'true'
+          NEXT_PUBLIC_API_BASE_URL: ''
+
+      - name: Upload Playwright report (${{ matrix.project }})
+        if: ${{ always() && !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7
+          include-hidden-files: true
+
+  # ── Summary ───────────────────────────────────────────────────
+  summary:
+    name: E2E results summary
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: ${{ always() && !cancelled() }}
+    steps:
+      - name: Summarise matrix results
+        run: |
+          STATUS="${{ needs.test.result }}"
+          EMOJI="✅"
+          [ "$STATUS" = "success" ] || EMOJI="❌"
+          echo "## E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Project | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| desktop-chrome | $EMOJI $STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "| mobile-chrome  | $EMOJI $STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "| tablet-chrome  | $EMOJI $STATUS |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Playwright reports are available as workflow run artifacts." >> $GITHUB_STEP_SUMMARY

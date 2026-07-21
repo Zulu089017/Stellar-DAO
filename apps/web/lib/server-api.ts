@@ -12,6 +12,22 @@ import type {
 
 const DEFAULT_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
 
+/**
+ * Short fetch timeout for SSR/build-time requests so the build doesn't
+ * hang when the API server isn't running (e.g. during `next build`).
+ * Server components that call these methods at build time will fail fast
+ * and the `.catch(() => fallback)` in the caller handles the rest.
+ */
+const FETCH_TIMEOUT_MS = 5_000;
+
+const fetchWithTimeout = (url: string, init?: RequestInit): Promise<Response> => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  return fetch(url, { ...init, signal: controller.signal }).finally(() =>
+    clearTimeout(timeout),
+  );
+};
+
 type Query = Record<string, string | number | undefined>;
 
 const buildQueryString = (q?: Query) => {
@@ -43,25 +59,49 @@ export const serverApi = {
   baseUrl: DEFAULT_BASE,
 
   async listAssets(): Promise<ListAssetsResponse> {
-    return fetch(`${DEFAULT_BASE}/assets${buildQueryString()}`).then(
-      (r) => (r.ok ? (r.json() as Promise<ListAssetsResponse>) : { assets: [] as AssetRegistryEntry[] }),
-    );
+    try {
+      const r = await fetchWithTimeout(`${DEFAULT_BASE}/assets`);
+      return r.ok
+        ? (r.json() as Promise<ListAssetsResponse>)
+        : { assets: [] as AssetRegistryEntry[] };
+    } catch {
+      return { assets: [] as AssetRegistryEntry[] };
+    }
   },
 
   async listTransactions(opts: { limit?: number; sourceChain?: SourceChainId } = {}): Promise<ListTransactionsResponse> {
-    return fetch(`${DEFAULT_BASE}/transactions${buildQueryString({ ...opts })}`).then(
-      (r) =>
-        r.ok
-          ? (r.json() as Promise<ListTransactionsResponse>)
-          : { transactions: [] as Transaction[] },
-    );
+    try {
+      const r = await fetchWithTimeout(
+        `${DEFAULT_BASE}/transactions${buildQueryString({ ...opts })}`,
+      );
+      return r.ok
+        ? (r.json() as Promise<ListTransactionsResponse>)
+        : { transactions: [] as Transaction[] };
+    } catch {
+      return { transactions: [] as Transaction[] };
+    }
   },
 
   async health(): Promise<HealthResponse | null> {
     try {
-      const r = await fetch(`${DEFAULT_BASE}/health`, { cache: 'no-store' });
+      const r = await fetchWithTimeout(`${DEFAULT_BASE}/health`);
       if (!r.ok) return null;
       return (await r.json()) as HealthResponse;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Fetch a single transaction by ID.
+   */
+  async getTransaction(id: string): Promise<Transaction | null> {
+    try {
+      const r = await fetchWithTimeout(
+        `${DEFAULT_BASE}/transactions/${encodeURIComponent(id)}`,
+      );
+      if (!r.ok) return null;
+      return (await r.json()) as Transaction;
     } catch {
       return null;
     }
@@ -76,7 +116,7 @@ export const serverApi = {
    * EventSource filtered by the returned txId to advance the UI.
    */
   async submitWrap(body: WrapRequestBody): Promise<WrapRequestResponse> {
-    const r = await fetch(`${DEFAULT_BASE}/bridge/wrap`, {
+    const r = await fetchWithTimeout(`${DEFAULT_BASE}/bridge/wrap`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

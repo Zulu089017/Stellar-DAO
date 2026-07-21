@@ -7,6 +7,7 @@ import { WalletConnect } from './wallet-connect';
 
 import { LogoMark } from '@/components/atoms/logo-mark';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { MobileNav } from '@/components/mobile-nav';
 
 const navItems = [
   { href: '/', label: 'Overview' },
@@ -48,6 +49,7 @@ export const TopNav = () => {
         <div className="flex items-center gap-3">
           <ThemeToggle />
           <WalletConnect />
+          <MobileNav />
         </div>
       </div>
     </header>

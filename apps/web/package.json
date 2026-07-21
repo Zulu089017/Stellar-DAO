@@ -11,7 +11,13 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "clean": "rm -rf .next dist .turbo"
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:desktop": "playwright test --project=desktop-chrome",
+    "test:e2e:mobile": "playwright test --project=mobile-chrome",
+    "test:e2e:report": "playwright show-report",
+    "clean": "rm -rf .next dist .turbo playwright-report test-results"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -28,6 +34,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@stellardao/eslint-config": "workspace:*",
     "@stellardao/tsconfig": "workspace:*",
     "@testing-library/jest-dom": "^7.0.0",

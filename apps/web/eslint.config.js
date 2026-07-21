@@ -13,11 +13,11 @@ import reactConfig from '../../packages/eslint-config/react.js';
 
 export default [
   {
-    // `next-env.d.ts` is a Next.js-generated shim (regenerated on every
-    // `next dev` / `next build`). typescript-eslint's strict
-    // `triple-slash-reference` rule treats it as `error`; the canonical
-    // Next.js flat-config guidance is to ignore it.
-    ignores: ['.next/**', 'node_modules/**', 'out/**', 'dist/**', 'next-env.d.ts'],
+    // Playwright e2e files use a completely different framework and
+    // should be excluded from React-specific lint rules. The top-level
+    // ignore also prevents `prettier` / `@typescript-eslint` rules from
+    // flagging Playwright's test() / describe() syntax as React hooks.
+    ignores: ['.next/**', 'node_modules/**', 'out/**', 'dist/**', 'next-env.d.ts', 'e2e/**'],
   },
   ...reactConfig,
 ];
