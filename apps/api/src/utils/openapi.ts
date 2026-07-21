@@ -43,7 +43,7 @@ const API_INFO: OpenApiInfo = {
  * Uses the internal route list which is available synchronously
  * after all plugins have been registered.
  */
-function getRegisteredRoutes(app: FastifyInstance): RouteInfo[] {
+function getRegisteredRoutes(_app: FastifyInstance): RouteInfo[] {
   // Fastify exposes routes via app.printRoutes() for logging,
   // but for programmatic access we introspect the internal
   // prefix tree. In Fastify v5, we define the routes manually
@@ -77,7 +77,7 @@ function getRegisteredRoutes(app: FastifyInstance): RouteInfo[] {
  * Build an OpenAPI 3.1 spec from the Fastify instance's route table.
  */
 export function buildOpenApiSpec(_app: FastifyInstance): OpenApiSpec {
-  const routes = getRegisteredRoutes(app);
+  const routes = getRegisteredRoutes(_app);
   const paths: Record<string, Record<string, unknown>> = {};
 
   for (const { method, url } of routes) {
