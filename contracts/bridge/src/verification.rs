@@ -52,27 +52,15 @@ impl AttestationVerifier for Ed25519Verifier {
         digest: &BytesN<32>,
         signature: &BytesN<64>,
     ) -> bool {
-        // ed25519_verify signature:
-        //   fn ed25519_verify(
-        //       &self,
-        //       public_key: &BytesN<32>,
-        //       message: &Bytes,
-        //       signature: &BytesN<64>,
-        //   ) -> Result<(), CryptoError>;
-        //
-        // The host function returns Ok(()) on success and Err on
-        // invalid signature. We convert to a bool for the trait
-        // interface — verification failures are handled by the caller
-        // (verify_threshold counts only successful verifications).
-        //
-        // The digest (SHA-256 of the payload) is passed as the
-        // message — ed25519 will internally hash again with SHA-512,
-        // which is cryptographically sound (both signer and verifier
-        // operate on the same 32-byte digest).
+        // soroban-sdk =21.7.7 `ed25519_verify` returns `()` (unit)
+        // — it panics on invalid signatures rather than returning
+        // a Result. The digest (SHA-256 of the payload) is passed
+        // as the message; ed25519 internally re-hashes with
+        // SHA-512, which is cryptographically sound (both signer
+        // and verifier operate on the same 32-byte digest).
         let msg: Bytes = digest.clone().into();
-        env.crypto()
-            .ed25519_verify(public_key, &msg, signature)
-            .is_ok()
+        env.crypto().ed25519_verify(public_key, &msg, signature);
+        true
     }
 }
 
