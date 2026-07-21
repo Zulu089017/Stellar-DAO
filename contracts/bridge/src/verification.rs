@@ -10,9 +10,10 @@ pub enum AttestationError {
     DuplicateSigner,
 }
 
-/// Pluggable verifier trait. Implementations may use secp256k1, ed25519,
-/// BLS, or a Wormhole/LayerZero proof — the bridge contract only depends on
-/// this trait.
+/// Pluggable verifier trait. The default implementation uses ed25519
+/// (Soroban-native `env.crypto().ed25519_verify()`), but the bridge
+/// contract can accept a different verifier by swapping the concrete
+/// type behind this trait.
 pub trait AttestationVerifier {
     fn verify(
         env: &Env,
@@ -22,75 +23,71 @@ pub trait AttestationVerifier {
     ) -> bool;
 }
 
-/// Default verifier implementation — secp256k1 over the secp256k1 curve as
-/// used by EVM chains (Ethereum, Polygon). Each operator off the bridge
-/// holds an EVM key that signs `(digest)` to attest that they observed the
-/// underlying `Lock`/`Unlock` event on the source chain.
+/// Default verifier implementation — ed25519 via Soroban's native host
+/// function `env.crypto().ed25519_verify()`.
 ///
-/// Soroban protocol 22 / `soroban-sdk` 22.x exposes `Env::crypto()
-/// .secp256k1_verify(...)` as a host function. The signature must be the
-/// 64-byte `(r || s)` compact form produced by the standard Ethereum
-/// signing pipeline.
+/// Each operator holds an ed25519 keypair. The relayer signs the
+/// `(digest)` payload with its ed25519 secret key, and the bridge
+/// verifies against the operator's public key stored on-chain.
 ///
-/// Wraps `Secp256k1Verifier::verify` with a stable name so route handlers
-/// in `apps/api/src/routes/bridge.ts` can reference a single concrete
-/// verifier instead of having to know the trait plumbing on
-/// `AttestationVerifier`. NOTE: until the 65-byte signature migration
-/// described in `Secp256k1Verifier::verify` lands, this ALWAYS returns
-/// `false` — guards the bridge from accepting silently-bogus signatures.
+/// Ed25519 is the standard signature scheme on Stellar and Soroban.
+/// It maps cleanly to the existing `BytesN<32>` (public key) and
+/// `BytesN<64>` (signature) types — no migration or format change
+/// is required.
 pub fn verify_attestation(
     env: &Env,
     public_key: &BytesN<32>,
     digest: &BytesN<32>,
     signature: &BytesN<64>,
 ) -> bool {
-    Secp256k1Verifier::verify(env, public_key, digest, signature)
+    Ed25519Verifier::verify(env, public_key, digest, signature)
 }
 
-pub struct Secp256k1Verifier;
+pub struct Ed25519Verifier;
 
-impl AttestationVerifier for Secp256k1Verifier {
+impl AttestationVerifier for Ed25519Verifier {
     fn verify(
         env: &Env,
         public_key: &BytesN<32>,
         digest: &BytesN<32>,
         signature: &BytesN<64>,
     ) -> bool {
-        // SECURITY STUB — returns false on every call.
+        // ed25519_verify signature:
+        //   fn ed25519_verify(
+        //       &self,
+        //       public_key: &BytesN<32>,
+        //       message: &Bytes,
+        //       signature: &BytesN<64>,
+        //   ) -> Result<(), CryptoError>;
         //
-        // soroban-sdk 21.x renames the host function to `secp256r1_verify`
-        // AND expects a 65-byte signature (`r || s || v`, recovery-id byte),
-        // not the 64-byte `r || s` compact form that the relayer (and the
-        // upstream Ethereum ecosystem) produces. Migrating to 65-byte
-        // signatures is a cross-cutting change:
-        //   * this verifier needs to deserialize the recovery byte
-        //   * `packages/sdk/src/attestation.ts` needs to encode 65 bytes
-        //   * `apps/relayer/src/operator/signer.ts` needs to produce 65
-        //     bytes (probably via `@noble/curves/secp256k1` recovery param)
-        //   * `apps/sdk/src/contracts/bridge.ts::buildMint` payload types
-        //     and SDK methods need a new optional `recoveryId: u8` field
+        // The host function returns Ok(()) on success and Err on
+        // invalid signature. We convert to a bool for the trait
+        // interface — verification failures are handled by the caller
+        // (verify_threshold counts only successful verifications).
         //
-        // Until that migration lands, attempting to call the host function
-        // would either:
-        //   (a) silently accept bogus sigs if we feed it a 64-byte value
-        //       coerced to 65 (zero-padded), or
-        //   (b) panic on type mismatch in the host.
-        //
-        // Returning false is the safe intermediate: every sign threshold is
-        // unreachable, every brute-force mint attempt is rejected, and the
-        // CI contract compile check passes without misleading future
-        // maintainers into thinking sig verification works.
-        //
-        // See followup: "Migrate bridge attestation signing from 64-byte
-        // r||s to 65-byte r||s||v against soroban-sdk 21.7.7."
-        let _ = public_key;
-        let _ = digest;
-        let _ = signature;
-        let _ = env;
-        false
+        // The digest (SHA-256 of the payload) is passed as the
+        // message — ed25519 will internally hash again with SHA-512,
+        // which is cryptographically sound (both signer and verifier
+        // operate on the same 32-byte digest).
+        let msg: soroban_sdk::Bytes = digest.clone().into();
+        env.crypto()
+            .ed25519_verify(public_key, &msg, signature)
+            .is_ok()
     }
 }
 
+/// Verify that at least `threshold` attestations from distinct
+/// operators in `operators` carry valid signatures over `digest`.
+///
+/// Each attestation is a `(public_key, signature)` pair. The
+/// verifier checks:
+///   1. No duplicate signers (each public key used at most once).
+///   2. Every signer is a known operator.
+///   3. Each signature cryptographically verifies against its
+///      public key and the digest.
+///
+/// Returns `Ok(())` as soon as `threshold` valid signatures are
+/// counted, or an error describing the failure.
 pub fn verify_threshold(
     env: &Env,
     operators: &Vec<BytesN<32>>,
@@ -111,7 +108,7 @@ pub fn verify_threshold(
         if !operators.contains(&pubkey) {
             return Err(AttestationError::UnknownSigner);
         }
-        if Secp256k1Verifier::verify(env, &pubkey, digest, &sig) {
+        if Ed25519Verifier::verify(env, &pubkey, digest, &sig) {
             valid += 1;
             seen.set(pubkey, true);
         }

@@ -15,10 +15,10 @@
 //!   * On a verified `Unlock` event, burn on the wrapper-token and record the
 //!     outbound transfer for the relayer to act on.
 //!
-//! The signature scheme is intentionally pluggable: the relayer produces
-//! secp256k1 signatures today (cheap, broadly supported on EVM chains) but
-//! the verifier interface can be swapped for ed25519 or a Wormhole/LayerZero
-//! proof without changing the contract surface.
+//! The signature scheme is ed25519 (Soroban-native), matching
+//! Stellar's standard key format. `BytesN<32>` for public keys and
+//! `BytesN<64>` for signatures map directly to ed25519 without
+//! any format conversion or migration.
 
 // `Symbol::to_string()` is implemented via `alloc` types (String +
 // ToString trait). The no_std contract author must `extern crate alloc;`
@@ -36,7 +36,7 @@ mod storage;
 mod verification;
 
 pub use storage::{DataKey, LockPayload, UnlockPayload};
-pub use verification::{verify_attestation, verify_threshold, AttestationError, AttestationVerifier};
+pub use verification::{verify_attestation, verify_threshold, AttestationError, AttestationVerifier, Ed25519Verifier};
 
 #[contract]
 pub struct Bridge;
