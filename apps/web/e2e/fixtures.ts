@@ -220,7 +220,7 @@ export class GovernancePage {
   }
 
   get heading() {
-    return this.page.getByRole('heading', { name: /governance/i });
+    return this.page.getByRole('heading', { name: 'Governance', exact: true });
   }
 
   get proposalCards() {
