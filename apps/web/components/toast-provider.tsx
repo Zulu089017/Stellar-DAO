@@ -15,7 +15,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useReducer,
   type ReactNode,
 } from 'react';
