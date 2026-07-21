@@ -1,16 +1,35 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
+
+import { __resetEnvCache } from '@stellardao/shared';
+
 import { createServer } from '../server.js';
+
 import type { FastifyInstance } from 'fastify';
+
+// ── Env setup (hoisted by vitest, same pattern as server.spec.ts) ──
+
+vi.stubEnv('STELLAR_NETWORK', 'TESTNET');
+vi.stubEnv('STELLAR_NETWORK_PASSPHRASE', 'Test SDF Network ; September 2015');
+vi.stubEnv('HORIZON_URL', 'https://horizon-testnet.stellar.org');
+vi.stubEnv('SOROBAN_RPC_URL', 'https://soroban-testnet.stellar.org');
+vi.stubEnv('ETHEREUM_RPC_URL', 'https://eth.llamarpc.com');
+vi.stubEnv('SOLANA_RPC_URL', 'https://api.mainnet-beta.solana.com');
+vi.stubEnv('POLYGON_RPC_URL', 'https://polygon-rpc.com');
 
 describe('GET /governance/stats', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
+    __resetEnvCache();
     app = await createServer({ logger: false });
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    __resetEnvCache();
   });
 
   it('returns 200 with governance stats', async () => {
@@ -34,11 +53,16 @@ describe('GET /governance/proposals', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
+    __resetEnvCache();
     app = await createServer({ logger: false });
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    __resetEnvCache();
   });
 
   it('returns 200 with proposal list', async () => {
@@ -77,11 +101,16 @@ describe('GET /governance/proposals/:id', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
+    __resetEnvCache();
     app = await createServer({ logger: false });
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    __resetEnvCache();
   });
 
   it('returns 400 for non-numeric id', async () => {
@@ -109,11 +138,16 @@ describe('POST /governance/proposals/:id/vote', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
+    __resetEnvCache();
     app = await createServer({ logger: false });
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    __resetEnvCache();
   });
 
   it('returns 400 when voter is missing', async () => {
@@ -164,11 +198,16 @@ describe('GET /governance/delegates/:address', () => {
   let app: FastifyInstance;
 
   beforeAll(async () => {
+    __resetEnvCache();
     app = await createServer({ logger: false });
   });
 
   afterAll(async () => {
     await app.close();
+  });
+
+  beforeEach(() => {
+    __resetEnvCache();
   });
 
   it('returns delegation info', async () => {
