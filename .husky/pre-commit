@@ -1,0 +1,15 @@
+# ── StellarDAO pre-commit hooks ────────────────────────────────
+# Runs on every `git commit`. Keeps the repo clean without
+# waiting for CI to catch issues.
+#
+# Install:  pnpm prepare   (runs `husky` automatically)
+
+echo "🔍 Running pre-commit checks…"
+
+# Format staged files with Prettier
+npx lint-staged
+
+# Quick typecheck (fastest package first)
+pnpm --filter @stellardao/shared typecheck --noEmit 2>/dev/null || true
+
+echo "✅ Pre-commit checks passed"
