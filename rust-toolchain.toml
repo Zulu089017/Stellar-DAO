@@ -1,0 +1,7 @@
+[toolchain]
+# Pin Rust to 1.76.0 — the stable channel when soroban-sdk =21.7.7
+# was released. Newer toolchains (1.97+) cause trait bound errors
+# in soroban-env-host 21.2.1's ed25519-dalek/rand_core dependency
+# chain.
+channel = "1.76.0"
+targets = ["wasm32-unknown-unknown"]
