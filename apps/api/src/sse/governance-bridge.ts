@@ -31,6 +31,13 @@ export async function registerGovernanceSse(app: FastifyInstance): Promise<void>
       `event: connected\ndata: ${JSON.stringify({ clientId })}\n\n`,
     );
 
+    // Test mode: when the X-Test-Close header is present, close the
+    // connection after the initial event so `app.inject()` resolves.
+    if (req.headers['x-test-close'] === 'true') {
+      reply.raw.end();
+      return;
+    }
+
     // Keep-alive ping every 30 seconds.
     const keepAlive = setInterval(() => {
       reply.raw.write(': keepalive\n\n');
