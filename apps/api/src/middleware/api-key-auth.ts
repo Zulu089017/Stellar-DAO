@@ -1,5 +1,4 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { createHmac, timingSafeEqual } from 'node:crypto';
 
 /**
  * API key authentication middleware for integrator endpoints.
