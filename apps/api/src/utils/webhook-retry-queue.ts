@@ -8,8 +8,6 @@
  * failed deliveries are logged and moved to a dead-letter queue.
  */
 
-import { setTimeout } from 'node:timers/promises';
-
 export interface WebhookJob {
   id: string;
   url: string;
@@ -109,6 +107,6 @@ async function processWebhookJob(job: WebhookJob): Promise<void> {
 
     const delay = backoffDelay(job.attempts);
     job.nextRetryAt = Date.now() + delay;
-    await setTimeout(delay);
+    await new Promise((resolve) => setTimeout(resolve, delay));
   }
 }
