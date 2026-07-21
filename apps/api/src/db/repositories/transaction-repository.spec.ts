@@ -3,14 +3,15 @@ import { Keypair } from '@stellar/stellar-sdk';
 import { __resetEnvCache, type Transaction } from '@stellardao/shared';
 
 import {
+  subscribeTransactions,
+  __resetEventBusForTest,
+} from '../../sse/event-bus.js';
+
+import {
   transactionRepository,
   initTransactionRepository,
   __resetTransactionRepoForTest,
 } from './transaction-repository.js';
-import {
-  subscribeTransactions,
-  __resetEventBusForTest,
-} from '../../sse/event-bus.js';
 
 /* ─────────────────── env stubs (required for parseEnv cached at module load) ─────────────────── */
 vi.stubEnv('STELLAR_NETWORK', 'TESTNET');

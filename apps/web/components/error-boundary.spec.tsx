@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+
 import { ErrorBoundary } from './error-boundary';
 
 function ThrowError({ message }: { message: string }): React.ReactNode {

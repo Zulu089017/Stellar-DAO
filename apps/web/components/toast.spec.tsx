@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+
 import { ToastContainer } from './toast';
 
 // Access the toast function directly via the custom event

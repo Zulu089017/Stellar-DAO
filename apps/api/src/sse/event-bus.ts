@@ -29,6 +29,7 @@
  * order.
  */
 import { EventEmitter } from 'node:events';
+
 import type { AssetRegistryEntry, Transaction } from '@stellardao/shared';
 
 export type TransactionEvent = {

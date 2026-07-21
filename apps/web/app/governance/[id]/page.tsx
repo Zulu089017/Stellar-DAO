@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+
 import { VotePanel } from '@/components/governance/vote-panel';
 
 export const metadata: Metadata = {

@@ -24,8 +24,9 @@
  * `mockResolvedValue('a'.repeat(64))` so the pre-stage POST /assets
  * step of the happy-path tests can run without touching real Soroban.
  */
-import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import crypto from 'node:crypto';
+
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { Keypair, StrKey } from '@stellar/stellar-sdk';
 import { FactoryContract } from '@stellardao/sdk';
 import { __resetEnvCache } from '@stellardao/shared';

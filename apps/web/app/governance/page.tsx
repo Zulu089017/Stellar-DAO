@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+
 import { ProposalList } from '@/components/governance/proposal-list';
 
 export const metadata: Metadata = {

@@ -1,6 +1,5 @@
 import { eq, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-
 import type {
   SourceChainId,
   Transaction,

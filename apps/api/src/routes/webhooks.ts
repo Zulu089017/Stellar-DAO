@@ -38,9 +38,9 @@
  * (`safe-stable-stringify`) is tracked as a follow-up.
  */
 import crypto from 'node:crypto';
+
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-
 import { parseEnv } from '@stellardao/shared';
 
 import { assetRepository } from '../db/repositories/asset-repository.js';

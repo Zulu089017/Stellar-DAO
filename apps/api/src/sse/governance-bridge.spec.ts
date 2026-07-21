@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
-
 import { __resetEnvCache } from '@stellardao/shared';
+import type { FastifyInstance } from 'fastify';
 
 import { createServer } from '../server.js';
 
-import type { FastifyInstance } from 'fastify';
 
 // ── Env setup (hoisted by vitest, same pattern as server.spec.ts) ──
 

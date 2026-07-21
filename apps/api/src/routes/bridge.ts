@@ -1,6 +1,7 @@
+import { randomBytes } from 'node:crypto';
+
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { randomBytes } from 'node:crypto';
 import type { BurnRequest, MintRequest, Transaction } from '@stellardao/shared';
 
 import { bridge } from '../soroban/index.js';

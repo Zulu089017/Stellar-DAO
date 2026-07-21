@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { serverApi } from '@/lib/server-api';
 import type { SourceChainId, Transaction } from '@stellardao/shared';
-import { ChainBadge } from '@/components/atoms/chain-badge';
 import { StatusDot } from '@stellardao/ui';
+
+import { serverApi } from '@/lib/server-api';
+import { ChainBadge } from '@/components/atoms/chain-badge';
 import { TransactionTimeline } from '@/components/dashboard/transaction-timeline';
 
 /**
