@@ -29,6 +29,7 @@
  */
 
 import { afterEach, describe, expect, it } from 'vitest';
+
 import { __resetEnvCache, parseEnv } from './index.js';
 
 /* ─────────────────────────── fixture ─────────────────────────── */
