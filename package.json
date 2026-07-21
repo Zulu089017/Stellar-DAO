@@ -23,7 +23,9 @@
     "contracts:deploy": "pnpm tsx scripts/deploy.ts",
     "bindings:generate": "pnpm tsx scripts/generate-bindings.ts",
     "changelog": "bash scripts/generate-changelog.sh",
-    "changelog:check": "bash scripts/generate-changelog.sh --check"
+    "changelog:check": "bash scripts/generate-changelog.sh --check",
+    "cli": "pnpm --filter @stellardao/cli cli",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
