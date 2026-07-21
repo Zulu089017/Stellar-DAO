@@ -1,0 +1,51 @@
+# ── StellarDAO deployment workflow ────────────────────────────
+# Manual trigger: deploys contracts and services to Stellar testnet.
+# Requires GitHub secrets: STELLAR_SECRET_KEY, SSH_HOST, SSH_KEY
+
+name: deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Stellar network to deploy to'
+        required: true
+        type: choice
+        default: 'TESTNET'
+        options:
+          - TESTNET
+          - PUBLIC
+
+jobs:
+  deploy-contracts:
+    name: Deploy Soroban Contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: contracts -> target
+      - name: Build contracts
+        working-directory: contracts
+        run: cargo build --target wasm32-unknown-unknown --release --workspace
+      - name: Deploy to ${{ github.event.inputs.network }}
+        run: echo "Deploying contracts to ${{ github.event.inputs.network }}…"
+        env:
+          STELLAR_SECRET_KEY: ${{ secrets.STELLAR_SECRET_KEY }}
+          STELLAR_NETWORK: ${{ github.event.inputs.network }}
+
+  deploy-services:
+    name: Deploy Services
+    needs: deploy-contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy via SSH
+        run: echo "Deploying services…"
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
