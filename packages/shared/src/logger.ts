@@ -24,19 +24,6 @@ const SECRET_KEYS = [
   'authorization',
 ] as const;
 
-/**
- * Redact sensitive fields from log output.
- * Never logs values matching known secret key patterns.
- */
-function redactSecrets(this: Record<string, unknown>, key: string, value: unknown): unknown {
-  if (SECRET_KEYS.some((sk) => key.toLowerCase().includes(sk.toLowerCase()))) {
-    return '[REDACTED]';
-  }
-  return value instanceof Error
-    ? { message: value.message, stack: process.env.NODE_ENV === 'development' ? value.stack : undefined }
-    : value;
-}
-
 export function createLogger(name: string): Logger {
   return pino({
     name,
