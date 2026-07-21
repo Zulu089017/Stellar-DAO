@@ -1,0 +1,116 @@
+# ── StellarDAO Docker Compose ──────────────────────────────────
+# Spins up the full local development stack:
+#   • PostgreSQL 16 — Drizzle ORM backend
+#   • API         — Fastify REST + SSE on :4000
+#   • Web         — Next.js 15 dashboard on :3000
+#   • Relayer     — Cross-chain event watcher
+#
+# Usage:
+#   docker compose up -d              # Start everything
+#   docker compose up api web         # Start specific services
+#   docker compose down               # Stop and remove containers
+#   docker compose logs -f api        # Tail API logs
+
+version: '3.9'
+
+services:
+  # ── PostgreSQL ───────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: stellardao-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: stellardao
+      POSTGRES_PASSWORD: stellardao
+      POSTGRES_DB: stellardao
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./apps/api/drizzle:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U stellardao']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── API ─────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: stellardao-api
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    environment:
+      NODE_ENV: development
+      STELLAR_NETWORK: TESTNET
+      STELLAR_NETWORK_PASSPHRASE: 'Test SDF Network ; September 2015'
+      HORIZON_URL: https://horizon-testnet.stellar.org
+      SOROBAN_RPC_URL: https://soroban-testnet.stellar.org
+      ETHEREUM_RPC_URL: https://eth.llamarpc.com
+      SOLANA_RPC_URL: https://api.mainnet-beta.solana.com
+      POLYGON_RPC_URL: https://polygon-rpc.com
+      API_PORT: '4000'
+      DATABASE_URL: postgres://stellardao:stellardao@postgres:5432/stellardao
+      API_KEYS: dev-key-1,dev-key-2
+      RELAYER_HMAC_SECRET: dev-hmac-secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/api/node_modules
+
+  # ── Web (Next.js) ───────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    container_name: stellardao-web
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_HORIZON_URL: https://horizon-testnet.stellar.org
+      NEXT_PUBLIC_SOROBAN_RPC_URL: https://soroban-testnet.stellar.org
+      NEXT_PUBLIC_NETWORK_PASSPHRASE: 'Test SDF Network ; September 2015'
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next
+    depends_on:
+      - api
+
+  # ── Relayer ─────────────────────────────────────────────────
+  relayer:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.relayer
+    container_name: stellardao-relayer
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      STELLAR_NETWORK: TESTNET
+      STELLAR_NETWORK_PASSPHRASE: 'Test SDF Network ; September 2015'
+      HORIZON_URL: https://horizon-testnet.stellar.org
+      SOROBAN_RPC_URL: https://soroban-testnet.stellar.org
+      ETHEREUM_RPC_URL: https://eth.llamarpc.com
+      SOLANA_RPC_URL: https://api.mainnet-beta.solana.com
+      POLYGON_RPC_URL: https://polygon-rpc.com
+      RELAYER_SECRET_KEY: ''
+      RELAYER_PUBLIC_KEY: ''
+      RELAYER_THRESHOLD: '2'
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/apps/relayer/node_modules
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
