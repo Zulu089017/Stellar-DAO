@@ -19,6 +19,8 @@
     "clean": "rm -rf dist .turbo"
   },
   "dependencies": {
+    "pino": "^9.5.0",
+    "pino-pretty": "^11.3.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
