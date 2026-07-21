@@ -14,6 +14,10 @@ export function ActivityMonitor() {
 
   useEffect(() => {
     // Placeholder: subscribe to bridge events via SSE.
+    const pickChain = (): string => {
+      const chains: string[] = ['ethereum', 'solana', 'polygon'];
+      return chains[Math.floor(Math.random() * chains.length)] ?? 'ethereum';
+    };
     const interval = setInterval(() => {
       setEvents((prev) => {
         const next = [
@@ -21,7 +25,7 @@ export function ActivityMonitor() {
             id: crypto.randomUUID(),
             type: Math.random() > 0.5 ? 'MintRequested' : 'BurnRequested',
             timestamp: new Date().toISOString(),
-            chain: ['ethereum', 'solana', 'polygon'][Math.floor(Math.random() * 3)],
+            chain: pickChain(),
           },
           ...prev.slice(0, 19),
         ];
