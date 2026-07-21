@@ -129,7 +129,8 @@ async function main(): Promise<void> {
     }
     default: {
       process.stderr.write(`Unknown command: ${command}\n`);
-      process.stderr.write('Run `pnpm cli help` for usage.\n`);
+      process.stderr.write('Run `pnpm cli help` for usage.\n');
+      process.exitCode = 1;
       return;
     }
   }
@@ -137,4 +138,5 @@ async function main(): Promise<void> {
 
 main().catch((err) => {
   process.stderr.write(`Error: ${err instanceof Error ? err.message : String(err)}\n`);
+  process.exitCode = 1;
 });
