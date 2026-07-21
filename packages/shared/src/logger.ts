@@ -40,7 +40,6 @@ function redactSecrets(this: Record<string, unknown>, key: string, value: unknow
 export function createLogger(name: string): Logger {
   return pino({
     name,
-    serializers: { ...pino.stdSerializers },
     redact: {
       paths: SECRET_KEYS.map((k) => `*.${k}`),
       censor: '[REDACTED]',
