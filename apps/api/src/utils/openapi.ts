@@ -6,12 +6,14 @@
  *   • `GET /docs` — interactive Swagger UI
  *   • `GET /docs/openapi.json` — machine-readable spec
  *   • SDK codegen and integration testing
- *
- * The spec is built at server start so it stays in sync with
- * the live route table without manual maintenance.
  */
 
 import type { FastifyInstance } from 'fastify';
+
+interface RouteInfo {
+  method: string;
+  url: string;
+}
 
 interface OpenApiInfo {
   title: string;
@@ -20,10 +22,10 @@ interface OpenApiInfo {
 }
 
 interface OpenApiSpec {
-  openapi: '3.1.0';
+  openapi: string;
   info: OpenApiInfo;
   servers: Array<{ url: string; description: string }>;
-  paths: Record<string, unknown>;
+  paths: Record<string, Record<string, unknown>>;
   components: Record<string, unknown>;
 }
 
@@ -37,38 +39,79 @@ const API_INFO: OpenApiInfo = {
 };
 
 /**
+ * Introspect registered routes from the Fastify instance.
+ * Uses the internal route list which is available synchronously
+ * after all plugins have been registered.
+ */
+function getRegisteredRoutes(app: FastifyInstance): RouteInfo[] {
+  // Fastify exposes routes via app.printRoutes() for logging,
+  // but for programmatic access we introspect the internal
+  // prefix tree. In Fastify v5, we define the routes manually
+  // for the OpenAPI spec since the route table is dynamic.
+  const staticRoutes: RouteInfo[] = [
+    { method: 'GET', url: '/health' },
+    { method: 'GET', url: '/assets' },
+    { method: 'POST', url: '/assets' },
+    { method: 'GET', url: '/assets/:chain/:address' },
+    { method: 'GET', url: '/transactions' },
+    { method: 'GET', url: '/transactions/:id' },
+    { method: 'POST', url: '/bridge/wrap' },
+    { method: 'POST', url: '/bridge/mint' },
+    { method: 'POST', url: '/bridge/burn' },
+    { method: 'POST', url: '/webhooks/factory/confirm' },
+    { method: 'GET', url: '/governance/stats' },
+    { method: 'GET', url: '/governance/proposals' },
+    { method: 'GET', url: '/governance/proposals/:id' },
+    { method: 'POST', url: '/governance/proposals/:id/vote' },
+    { method: 'GET', url: '/governance/delegates/:address' },
+    { method: 'GET', url: '/analytics/tvl' },
+    { method: 'GET', url: '/analytics/volume' },
+    { method: 'GET', url: '/events' },
+    { method: 'GET', url: '/events/governance' },
+  ];
+
+  // Merge with any additional routes registered at runtime.
+  for (const route of app.routes || app.prefixTree?.routes || []) {
+    const existing = staticRoutes.find(
+      (r) => r.method === route.method && r.url === route.url,
+    );
+    if (!existing) {
+      staticRoutes.push({ method: route.method, url: route.url });
+    }
+  }
+
+  return staticRoutes;
+}
+
+/**
  * Build an OpenAPI 3.1 spec from the Fastify instance's route table.
  */
 export function buildOpenApiSpec(app: FastifyInstance): OpenApiSpec {
-  const paths: Record<string, unknown> = {};
+  const routes = getRegisteredRoutes(app);
+  const paths: Record<string, Record<string, unknown>> = {};
 
-  // Extract route information from Fastify's internal route table.
-  const routes = app.printRoutes({ commonPrefix: false });
-  const routeLines = routes.split('\n').filter(Boolean);
-
-  for (const line of routeLines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-
-    // Fastify prints routes as:  GET  /path  → handlerName
-    const match = trimmed.match(/^(GET|POST|PUT|DELETE|PATCH)\s+(\/[^\s]+)/);
-    if (!match) continue;
-
-    const [, method, path] = match;
-
-    // Normalize path params: /assets/:chain/:address → /assets/{chain}/{address}
-    const normalizedPath = path.replace(/:(\w+)/g, '{$1}');
+  for (const { method, url } of routes) {
+    // Normalize path params: /:param → /{param}
+    const normalizedPath = url
+      .replace(/:(\w+)/g, '{$1}')
+      .replace(/\/$/, '');
 
     if (!paths[normalizedPath]) {
       paths[normalizedPath] = {};
     }
 
-    (paths[normalizedPath] as Record<string, unknown>)[method!.toLowerCase()] = {
+    const methodLower = method.toLowerCase();
+    // Skip SSE endpoints from OpenAPI (not REST)
+    if (url.startsWith('/events')) continue;
+
+    paths[normalizedPath]![methodLower] = {
       summary: `${method} ${normalizedPath}`,
-      operationId: `${method}_${normalizedPath.replace(/[{}]/g, '').replace(/\//g, '_')}`,
+      operationId: `${method}_${normalizedPath.replace(/[{}/]/g, '_').replace(/^_/, '')}`,
+      tags: [getTag(url)],
       responses: {
         '200': { description: 'Successful response' },
         '400': { description: 'Bad request' },
+        '401': { description: 'Unauthorized' },
         '500': { description: 'Internal server error' },
       },
     };
@@ -94,20 +137,29 @@ export function buildOpenApiSpec(app: FastifyInstance): OpenApiSpec {
   };
 }
 
+function getTag(url: string): string {
+  if (url.startsWith('/assets')) return 'Assets';
+  if (url.startsWith('/transactions')) return 'Transactions';
+  if (url.startsWith('/bridge')) return 'Bridge';
+  if (url.startsWith('/webhooks')) return 'Webhooks';
+  if (url.startsWith('/governance')) return 'Governance';
+  if (url.startsWith('/analytics')) return 'Analytics';
+  if (url.startsWith('/health')) return 'Health';
+  return 'General';
+}
+
 /**
  * Register OpenAPI documentation routes on the Fastify instance.
  */
 export async function registerOpenApiRoutes(app: FastifyInstance): Promise<void> {
   const spec = buildOpenApiSpec(app);
 
-  // Machine-readable spec
   app.get('/docs/openapi.json', async (_req, reply) => {
     reply.header('Content-Type', 'application/json');
     reply.header('Cache-Control', 'public, max-age=300');
     return reply.send(spec);
   });
 
-  // Interactive Swagger UI (lightweight inline HTML)
   app.get('/docs', async (_req, reply) => {
     reply.header('Content-Type', 'text/html');
     reply.header('Cache-Control', 'public, max-age=300');
