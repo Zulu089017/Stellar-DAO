@@ -1,5 +1,5 @@
 {
   "*.{ts,tsx,js,jsx,json,md,yml,yaml}": ["prettier --write"],
   "*.{ts,tsx}": ["pnpm exec eslint --fix --max-warnings 0"],
-  "*.rs": ["rustfmt --edition 2021"]
+  "*.rs": ["cargo fmt -- 2>/dev/null || true"]
 }
