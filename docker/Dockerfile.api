@@ -1,0 +1,33 @@
+# ── StellarDAO API Dockerfile ─────────────────────────────────
+# Multi-stage build for the Fastify REST + SSE API service.
+# Produces a lean production image with pnpm and tsc-compiled JS.
+
+FROM node:20.11.0-alpine AS base
+RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
+WORKDIR /app
+
+FROM base AS deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.json .npmrc ./
+COPY packages/shared/package.json packages/shared/
+COPY packages/sdk/package.json packages/sdk/
+COPY packages/soroban-client/package.json packages/soroban-client/
+COPY packages/eslint-config/package.json packages/eslint-config/
+COPY packages/tsconfig/package.json packages/tsconfig/
+COPY apps/api/package.json apps/api/
+RUN pnpm install --frozen-lockfile --filter @stellardao/api...
+
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY . .
+RUN pnpm --filter @stellardao/api build
+
+FROM base AS runner
+ENV NODE_ENV=production
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=deps /app/packages ./packages
+
+EXPOSE 4000
+CMD ["node", "apps/api/dist/index.js"]
