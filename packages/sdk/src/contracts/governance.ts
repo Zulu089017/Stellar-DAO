@@ -5,7 +5,7 @@
  * governance proposal contract, and timelock controller from off-chain.
  */
 
-import type { GovernanceProposal, ProposalState, VoteType } from '@stellardao/shared';
+import type { GovernanceProposal, VoteType } from '@stellardao/shared';
 
 export interface GovernanceTokenBindings {
   /** Total supply of governance tokens. */
