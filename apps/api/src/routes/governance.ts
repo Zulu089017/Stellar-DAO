@@ -69,10 +69,9 @@ export const governanceRoutes = async (app: FastifyInstance): Promise<void> => {
   app.get<{ Querystring: { status?: string; limit?: number; cursor?: number } }>(
     '/proposals',
     async (req, reply) => {
-      const limit = Math.min(req.query.limit ?? 20, 100);
-
       // Placeholder: in production this reads from the governance contract
-      // or an indexed database view.
+      // or an indexed database view. Once populated, the `limit` from
+      // `req.query.limit` (already clamped) controls page size.
       const proposals: ProposalResponse[] = [];
 
       return reply.send({
