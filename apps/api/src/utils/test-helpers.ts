@@ -1,6 +1,9 @@
 /**
  * Integration test helpers for the StellarDAO API.
  *
+ * TEST-ONLY MODULE: Do not import from production code.
+ * Uses vitest's `vi` which is only available in test contexts.
+ *
  * Provides reusable test fixtures and setup/teardown utilities
  * for integration tests. Reduces boilerplate across 9 test files
  * and ensures consistent test environment configuration.
