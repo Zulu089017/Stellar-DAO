@@ -14,7 +14,9 @@
  */
 import { Horizon, Networks } from '@stellar/stellar-sdk';
 import { z } from 'zod';
+
 import type { StellarNetwork } from '@stellardao/shared';
+
 import { withRetry } from './retry.js';
 
 const HorizonErrorSchema = z.object({
