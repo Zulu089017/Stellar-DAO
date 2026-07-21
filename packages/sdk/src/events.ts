@@ -5,12 +5,14 @@
  * events from the Horizon SSE bridge. Automatically handles
  * reconnection, cursor tracking, and event type filtering.
  *
- * Usage:
- *   const sub = createEventSubscription(horizonUrl);
+ * NOTE: This module uses the `EventSource` Web API and is intended
+ * for browser/client-side use only. Node.js consumers should use
+ * the HTTP SSE stream directly or add an `eventsource` polyfill.
+ *
+ * Usage (browser):
+ *   const sub = createEventSubscription('https://horizon-testnet.stellar.org');
  *   sub.on('transaction-update', (tx) => console.log(tx));
- *   sub.on('asset-update', (asset) => console.log(asset));
  *   sub.start();
- *   // Later: sub.stop();
  */
 
 import type { Transaction, AssetRegistryEntry } from '@stellardao/shared';
@@ -24,6 +26,11 @@ interface SubscriptionOptions {
   maxReconnectDelay?: number;
 }
 
+/**
+ * Typed event subscription wrapping the native EventSource API.
+ * Handles automatic reconnection with exponential backoff.
+ * Browser-only — requires `EventSource` constructor.
+ */
 export class EventSubscription {
   private eventSource: EventSource | null = null;
   private handlers = new Map<string, Set<EventHandler>>();
@@ -31,6 +38,12 @@ export class EventSubscription {
   private readonly opts: Required<SubscriptionOptions>;
 
   constructor(opts: SubscriptionOptions) {
+    if (typeof EventSource === 'undefined') {
+      throw new Error(
+        'EventSubscription requires the EventSource Web API. ' +
+          'Use in a browser environment or add an eventsource polyfill for Node.js.',
+      );
+    }
     this.opts = {
       reconnectDelay: 1_000,
       maxReconnectDelay: 30_000,
@@ -38,7 +51,7 @@ export class EventSubscription {
     };
   }
 
-  /** Register a typed event handler. */
+  /** Register a typed event handler. Returns unsubscribe function. */
   on<T = unknown>(event: EventType, handler: EventHandler<T>): () => void {
     if (!this.handlers.has(event)) {
       this.handlers.set(event, new Set());
@@ -66,6 +79,11 @@ export class EventSubscription {
     }
   }
 
+  /** Returns true if the connection is currently active. */
+  get isConnected(): boolean {
+    return this.eventSource?.readyState === EventSource.OPEN;
+  }
+
   private connect(): void {
     const url = `${this.opts.baseUrl}/events`;
     this.eventSource = new EventSource(url);
@@ -79,16 +97,16 @@ export class EventSubscription {
       this.scheduleReconnect();
     };
 
-    // Wire up handlers for each registered event type.
     for (const [event, handlers] of this.handlers.entries()) {
       this.eventSource.addEventListener(event, (msg: MessageEvent) => {
         try {
-          const data = JSON.parse(msg.data);
+          const data = JSON.parse(msg.data as string);
           for (const handler of handlers) {
             handler(data);
           }
         } catch {
-          // Skip unparseable events.
+          // Skip unparseable events — the SSE spec allows
+          // non-JSON keepalive comments and multi-line payloads.
         }
       });
     }
@@ -106,6 +124,7 @@ export class EventSubscription {
 
 /**
  * Create a typed event subscription to the StellarDAO SSE bridge.
+ * Browser-only — see class documentation.
  */
 export function createEventSubscription(baseUrl: string): EventSubscription {
   return new EventSubscription({ baseUrl });
