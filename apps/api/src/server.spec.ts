@@ -331,11 +331,20 @@ describe('POST /bridge/wrap', () => {
    * `pending` upsert, which is the only synchronous broadcast — the
    * later lifecycle steps are timer-driven and not deterministic
    * inside the test runner.
+   *
+   * NOTE: `scheduleMockLifecycle` in the route is fire-and-forget
+   * (`void`), so orphaned lifecycle timers from a previous spec can
+   * still fire during this test, broadcasting `'attesting'` events
+   * before this test's own `'pending'` broadcast arrives. Rather than
+   * asserting the first event's status (which picks up orphan noise),
+   * we verify that a `'pending'` event exists somewhere in the batch.
    */
   it('broadcasts transaction-update via the in-process bus on POST', async () => {
-    const events: Array<{ status: string; id: string }> = [];
+    const pendingIds = new Set<string>();
     const unsubscribe = subscribeTransactions(({ transaction }) => {
-      events.push({ status: transaction.status, id: transaction.id });
+      if (transaction.status === 'pending') {
+        pendingIds.add(transaction.id);
+      }
     });
 
     const app = await createServer();
@@ -346,10 +355,10 @@ describe('POST /bridge/wrap', () => {
         payload: validPayload(),
       });
       expect(res.statusCode).toBe(202);
+      const { txId } = res.json();
       // The POST returns after the synchronous `upsert(initial)`, so
       // at minimum the initial broadcast has fired.
-      expect(events.length).toBeGreaterThanOrEqual(1);
-      expect(events[0]?.status).toBe('pending');
+      expect(pendingIds.has(txId)).toBe(true);
     } finally {
       unsubscribe();
       await app.close();
