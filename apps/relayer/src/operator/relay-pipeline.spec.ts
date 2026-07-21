@@ -31,8 +31,8 @@ const makeDeps = (
   );
   const stubSign = vi.fn(
     async (
-      _digest: Parameters<HandleLockEventDeps['signSecp256k1']>[0],
-      _key: Parameters<HandleLockEventDeps['signSecp256k1']>[1],
+      _digest: Parameters<HandleLockEventDeps['signEd25519']>[0],
+      _key: Parameters<HandleLockEventDeps['signEd25519']>[1],
     ): Promise<Uint8Array> => new Uint8Array(64).fill(0x42),
   );
   const stubSubmitMint = vi.fn(
@@ -47,7 +47,7 @@ const makeDeps = (
   return {
     eventQueue,
     buildLockDigest: stubDigest as unknown as HandleLockEventDeps['buildLockDigest'],
-    signSecp256k1: stubSign as unknown as HandleLockEventDeps['signSecp256k1'],
+    signEd25519: stubSign as unknown as HandleLockEventDeps['signEd25519'],
     signer: stubSigner,
     bridge: new BridgeContract(''),
     sourceKeypair: Keypair.random(),
@@ -64,7 +64,7 @@ const getSubmitCalls = (deps: HandleLockEventDeps) =>
     .calls;
 
 const getSignCalls = (deps: HandleLockEventDeps) =>
-  (deps.signSecp256k1 as unknown as ReturnType<typeof vi.fn>).mock.calls;
+  (deps.signEd25519 as unknown as ReturnType<typeof vi.fn>).mock.calls;
 
 const getDigestCalls = (deps: HandleLockEventDeps) =>
   (deps.buildLockDigest as unknown as ReturnType<typeof vi.fn>).mock.calls;
@@ -166,7 +166,7 @@ describe('handleLockEvent', () => {
     const deps = makeDeps({ relayerSecretKey: undefined });
     await handleLockEvent('ethereum', event, deps);
 
-    // signSecp256k1 must NOT be called in the dry-run path.
+    // signEd25519 must NOT be called in the dry-run path.
     expect(getSignCalls(deps)).toHaveLength(0);
 
     const submitCalls = getSubmitCalls(deps);
@@ -177,10 +177,10 @@ describe('handleLockEvent', () => {
     expect([...submittedSig].every((byte) => byte === 0)).toBe(true);
   });
 
-  /* 4. Signed path: signSecp256k1 receives the digest built from the
+  /* 4. Signed path: signEd25519 receives the digest built from the
    *    lock event fields + the secret key, and the resulting
    *    signature bytes are forwarded to submitMintToBridge. */
-  it('signed path: invokes signSecp256k1 with the digest + secretKey and submits the resulting signature', async () => {
+  it('signed path: invokes signEd25519 with the digest + secretKey and submits the resulting signature', async () => {
     const secretKey = '0x' + 'b1'.repeat(32);
     const event = makeLockEvent();
     const deps = makeDeps({ relayerSecretKey: secretKey });
@@ -190,7 +190,7 @@ describe('handleLockEvent', () => {
     expect(signCalls).toHaveLength(1);
     const [digestArg, keyArg] = signCalls[0] ?? [];
     if (!digestArg || !keyArg) {
-      throw new Error('expected signSecp256k1 to receive (digest, secretKey)');
+      throw new Error('expected signEd25519 to receive (digest, secretKey)');
     }
     // `digest` is whatever the stub returned; just check length.
     expect((digestArg as Uint8Array).length).toBe(32);

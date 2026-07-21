@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import pino from 'pino';
 import type { Keypair } from '@stellar/stellar-sdk';
 import type { BridgeContract } from '@stellardao/sdk';
-import { type buildLockDigest, type signSecp256k1 } from '@stellardao/sdk';
+import { type buildLockDigest, type signEd25519 } from '@stellardao/sdk';
 import type { SourceChainId, Transaction } from '@stellardao/shared';
 
 import { type eventQueue } from '../state/event-queue.js';
@@ -63,7 +63,7 @@ function envelope(event: LockEvent, chain: SourceChainId): Transaction {
 export type HandleLockEventDeps = {
   eventQueue: typeof eventQueue;
   buildLockDigest: typeof buildLockDigest;
-  signSecp256k1: typeof signSecp256k1;
+  signEd25519: typeof signEd25519;
   signer: typeof signer;
   bridge: BridgeContract;
   sourceKeypair: Keypair;
@@ -78,7 +78,7 @@ export type HandleLockEventDeps = {
  * of `main()`'s inline closure so it's testable in isolation:
  *
  *  1. Envelope + push to eventQueue (dedup'd by `(chain, nonce)`).
- *  2. `buildLockDigest` + `signSecp256k1` (or dry-run zeroed sig).
+ *  2. `buildLockDigest` + `signEd25519` (or dry-run zeroed sig).
  *  3. `signer.submitMintToBridge` against the BridgeContract.
  *  4. On success: `updateById` to `minting` with the resulting hash.
  *  5. On failure: `updateById` to `failed` with the error message.
@@ -119,7 +119,7 @@ export async function handleLockEvent(
   // from `index.ts`), but the test path needs this branch to be
   // observable end-to-end so the no-key shape is asserted.
   const signature = deps.relayerSecretKey
-    ? await deps.signSecp256k1(digest, deps.relayerSecretKey)
+    ? await deps.signEd25519(digest, deps.relayerSecretKey)
     : new Uint8Array(64);
 
   try {

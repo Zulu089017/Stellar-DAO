@@ -4,7 +4,7 @@ import { parseEnv, type SourceChainId } from '@stellardao/shared';
 import {
   BridgeContract,
   buildLockDigest,
-  signSecp256k1,
+  signEd25519,
 } from '@stellardao/sdk';
 
 import { ethereumWatcher } from './sources/ethereum.js';
@@ -63,7 +63,7 @@ async function main() {
   const pipelineDeps = {
     eventQueue,
     buildLockDigest,
-    signSecp256k1,
+    signEd25519,
     signer,
     bridge,
     sourceKeypair,
