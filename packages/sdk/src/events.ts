@@ -15,8 +15,6 @@
  *   sub.start();
  */
 
-import type { Transaction, AssetRegistryEntry } from '@stellardao/shared';
-
 export type EventType = 'contract-event' | 'transaction-update' | 'asset-update';
 export type EventHandler<T = unknown> = (data: T) => void;
 
@@ -26,13 +24,35 @@ interface SubscriptionOptions {
   maxReconnectDelay?: number;
 }
 
+/** Minimal interface for the browser EventSource, avoiding DOM lib types. */
+interface SseSource {
+  close(): void;
+  addEventListener(type: string, listener: (evt: SseMessageEvent) => void): void;
+  readonly readyState: number;
+  onopen: (() => void) | null;
+  onerror: (() => void) | null;
+}
+
+interface SseMessageEvent {
+  data: string;
+}
+
+// eslint-disable-next-line no-var
+declare var EventSource: {
+  prototype: SseSource;
+  new (url: string): SseSource;
+  readonly CONNECTING: 0;
+  readonly OPEN: 1;
+  readonly CLOSED: 2;
+};
+
 /**
  * Typed event subscription wrapping the native EventSource API.
  * Handles automatic reconnection with exponential backoff.
  * Browser-only — requires `EventSource` constructor.
  */
 export class EventSubscription {
-  private eventSource: EventSource | null = null;
+  private eventSource: SseSource | null = null;
   private handlers = new Map<string, Set<EventHandler>>();
   private reconnectCount = 0;
   private readonly opts: Required<SubscriptionOptions>;
@@ -98,11 +118,7 @@ export class EventSubscription {
     };
 
     for (const [event, handlers] of this.handlers.entries()) {
-      // TypeScript's EventSource.addEventListener types don't account
-      // for custom SSE event names returning MessageEvent. At runtime,
-      // all SSE events carry a data field. We cast to satisfy tsc.
-      const listener = (evt: Event) => {
-        const msg = evt as MessageEvent<string>;
+      this.eventSource.addEventListener(event, (msg: SseMessageEvent) => {
         try {
           const data = JSON.parse(msg.data);
           for (const handler of handlers) {
@@ -112,11 +128,7 @@ export class EventSubscription {
           // Skip unparseable events — the SSE spec allows
           // non-JSON keepalive comments and multi-line payloads.
         }
-      };
-      this.eventSource.addEventListener(
-        event as keyof EventSourceEventMap,
-        listener as EventListener,
-      );
+      });
     }
   }
 
