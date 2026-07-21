@@ -70,16 +70,6 @@ function getRegisteredRoutes(app: FastifyInstance): RouteInfo[] {
     { method: 'GET', url: '/events/governance' },
   ];
 
-  // Merge with any additional routes registered at runtime.
-  for (const route of app.routes || app.prefixTree?.routes || []) {
-    const existing = staticRoutes.find(
-      (r) => r.method === route.method && r.url === route.url,
-    );
-    if (!existing) {
-      staticRoutes.push({ method: route.method, url: route.url });
-    }
-  }
-
   return staticRoutes;
 }
 
