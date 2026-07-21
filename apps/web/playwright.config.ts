@@ -2,6 +2,14 @@ import { defineConfig, devices } from '@playwright/test';
 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
 
+// Use `next start` (production server, faster) in CI or when
+// PLAYWRIGHT_SERVER_MODE=production is set. Otherwise use `next dev`
+// for hot-reload during local development.
+const WEB_SERVER_CMD =
+  process.env.PLAYWRIGHT_SERVER_MODE === 'production'
+    ? 'NODE_ENV=test NEXT_PUBLIC_DEMO_MODE=true npx next start --port 3000'
+    : 'NODE_ENV=test NEXT_PUBLIC_DEMO_MODE=true npx next dev --port 3000';
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -22,10 +30,12 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
-  // Auto-start the Next.js dev server with the test run.
-  // In CI, set PLAYWRIGHT_BASE_URL to the preview deployment URL instead.
+  // Auto-start the Next.js server with the test run.
+  // Set PLAYWRIGHT_BASE_URL to skip the webServer and test against an
+  // external deployment (e.g. preview URL in CI).
+  // Set PLAYWRIGHT_SERVER_MODE=production to use `next start` (faster).
   webServer: {
-    command: 'NODE_ENV=test NEXT_PUBLIC_DEMO_MODE=true npx next dev --port 3000',
+    command: WEB_SERVER_CMD,
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
