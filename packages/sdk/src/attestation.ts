@@ -3,15 +3,17 @@
  * the bridge signatures are over. The bridge pays for verification, the
  * relayer pays for constructing the canonical digest.
  *
+ * Uses ed25519 via Soroban's native `env.crypto().ed25519_verify()`.
+ * Ed25519 maps cleanly to the existing `BytesN<32>` (public key) and
+ * `BytesN<64>` (signature) types — no format conversion needed.
+ *
  * Imports `@noble/hashes` and `@noble/curves` from their top-level entries
- * (v1.5+ exposes sha256 / secp256k1 directly); the subpath forms
- * (`@noble/hashes/sha256`) trip TypeScript's moduleResolution in our
- * tsconfig even though they're valid runtime paths.
+ * (v1.5+ exposes sha256 / ed25519 directly).
  */
 import { Buffer } from 'node:buffer';
 
 import { sha256 } from '@noble/hashes/sha256';
-import { secp256k1 } from '@noble/curves/secp256k1';
+import { ed25519 } from '@noble/curves/ed25519';
 import type { LockPayload, UnlockPayload } from '@stellardao/shared';
 import { SIGNATURE_TAGS } from '@stellardao/shared';
 
@@ -46,24 +48,23 @@ export function buildUnlockDigest(
   return sha256(buf);
 }
 
-/** Sign the digest with secp256k1 (default relayer scheme). */
-export async function signSecp256k1(
+/** Sign the digest with ed25519 (Soroban-native scheme). */
+export async function signEd25519(
   digest: Uint8Array,
   privateKeyHex: string,
 ): Promise<Uint8Array> {
   const priv = Buffer.from(privateKeyHex.replace(/^0x/, ''), 'hex');
-  const sig = secp256k1.sign(digest, priv, { lowS: true });
-  return sig.toBytes('compact');
+  return ed25519.sign(digest, priv);
 }
 
-/** Verify a secp256k1 attestation server-side (used by the relayer's joining nodes). */
-export async function verifySecp256k1(
+/** Verify an ed25519 attestation (used by the relayer's joining nodes). */
+export async function verifyEd25519(
   digest: Uint8Array,
   publicKey: Uint8Array,
   signature: Uint8Array,
 ): Promise<boolean> {
   try {
-    return secp256k1.verify(signature, digest, publicKey, { lowS: true });
+    return ed25519.verify(signature, digest, publicKey);
   } catch {
     return false;
   }
@@ -73,13 +74,13 @@ export async function verifySecp256k1(
 
 /**
  * SDK-side mirror of `verify_threshold` in
- * `contracts/bridge/src/verification.rs`. The on-chain verifier is
- * currently a SECURITY STUB that returns `false` for every call
- * (pending the 64→65-byte signature migration against `soroban-sdk`
- * 21.x), so the relayer MUST pre-validate locally before
- * submitting a Soroban RPC. This helper returns a tagged union
- * — never throws — so callers can dispatch on the failure mode
- * without try/catch boilerplate.
+ * `contracts/bridge/src/verification.rs`. Uses ed25519 via
+ * Soroban's native `env.crypto().ed25519_verify()`.
+ *
+ * The relayer pre-validates locally before submitting to Soroban RPC
+ * to avoid wasting gas on invalid attestation bundles. Returns a
+ * tagged union — never throws — so callers can dispatch on the
+ * failure mode without try/catch boilerplate.
  *
  * The tagged-union `error` field maps 1:1 onto the Rust variants:
  *   `'duplicate_signer'`  ↔ `AttestationError::DuplicateSigner`
@@ -89,8 +90,7 @@ export async function verifySecp256k1(
  * Per-attestation check order (duplicate → unknown → valid →
  * threshold) matches the Rust loop so the two implementations
  * cannot disagree on the failure class for any given input.
- * Short-circuits as soon as `valid >= threshold` to avoid wasted
- * EC verify calls (each ~50µs).
+ * Short-circuits as soon as `valid >= threshold`.
  */
 export type AttestationEntry = { publicKey: Uint8Array; signature: Uint8Array };
 
@@ -104,21 +104,10 @@ export async function verifyThreshold(
   operators: Uint8Array[],
   digest: Uint8Array,
 ): Promise<ThresholdResult> {
-  // Degenerate threshold-0: there is nothing to verify at the
-  // signature-aggregation layer. Mirror the "admin override /
-  // localnet single-trusted-setup" case the Rust contract handles
-  // at its call site, so the relayer can pre-validate zero-threshold
-  // payloads without forcing callers to populate the empty atts
-  // array. Without this short-circuit we silently fall through to
-  // `insufficient` even though `valid=0 >= threshold=0` is vacuously
-  // true.
   if (threshold === 0) {
     return { ok: true };
   }
 
-  // Set membership keyed by lowercase hex so the comparison is
-  // allocation-free even for large operator sets (50+ operators
-  // is plausible once the multi-tenant relayer is in place).
   const operatorsSet = new Set<string>(operators.map(bytesToHex));
   const seen = new Set<string>();
   let valid = 0;
@@ -131,7 +120,7 @@ export async function verifyThreshold(
     if (!operatorsSet.has(pubHex)) {
       return { ok: false, error: 'unknown_signer' };
     }
-    const isValid = await verifySecp256k1(digest, att.publicKey, att.signature);
+    const isValid = await verifyEd25519(digest, att.publicKey, att.signature);
     if (isValid) {
       valid += 1;
       seen.add(pubHex);
@@ -147,7 +136,6 @@ export async function verifyThreshold(
 /* ───────────────  internal helpers  ─────────────── */
 
 function toBigEndianBytes(value: bigint): Uint8Array {
-  // 16-byte big-endian (i128) digest field; small enough for all reasonable amounts.
   const out = new Uint8Array(16);
   let v = value;
   for (let i = 15; i >= 0; i--) {
