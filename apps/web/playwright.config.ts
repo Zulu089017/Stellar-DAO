@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
+// Use `||` (not `??`) so an empty-string PLAYWRIGHT_BASE_URL from
+// GitHub Actions vars also falls back to localhost.
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
 
 // Use `next start` (production server, faster) in CI or when
 // PLAYWRIGHT_SERVER_MODE=production is set. Otherwise use `next dev`
