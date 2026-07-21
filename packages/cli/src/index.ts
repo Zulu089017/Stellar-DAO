@@ -16,7 +16,6 @@
  *   pnpm cli keys generate --name my-app
  */
 
-import { parseArgs } from 'node:util';
 import { randomBytes } from 'node:crypto';
 
 const HELP = `
@@ -80,7 +79,7 @@ async function main(): Promise<void> {
 
   if (!command || command === 'help' || options['help'] || options['h']) {
     process.stdout.write(HELP);
-    process.exit(0);
+    return;
   }
 
   const useJson = Boolean(options['json']);
@@ -130,13 +129,12 @@ async function main(): Promise<void> {
     }
     default: {
       process.stderr.write(`Unknown command: ${command}\n`);
-      process.stderr.write('Run `pnpm cli help` for usage.\n');
-      process.exit(1);
+      process.stderr.write('Run `pnpm cli help` for usage.\n`);
+      return;
     }
   }
 }
 
 main().catch((err) => {
   process.stderr.write(`Error: ${err instanceof Error ? err.message : String(err)}\n`);
-  process.exit(1);
 });
