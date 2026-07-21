@@ -45,7 +45,7 @@ export default function ProposalDetailPage({
             <h2 className="text-sm font-semibold text-white">Description</h2>
             <p className="mt-2 text-sm text-stellar-haze leading-relaxed">
               This proposal seeks to expand the StellarDAO bridge ecosystem by adding a new
-              wrapped token, improving cross-chain liquidity and expanding the protocol's
+              wrapped token, improving cross-chain liquidity and expanding the protocol&apos;s
               reach to more users and developers in the ecosystem.
             </p>
           </div>
@@ -87,7 +87,7 @@ export default function ProposalDetailPage({
             </dl>
             <div className="mt-4 pt-4 border-t border-white/5">
               <p className="text-xs text-stellar-haze">
-                Quorum: 4% · Threshold: {">"}50% for votes
+                Quorum: 4% · Threshold: &gt;50% for votes
               </p>
             </div>
           </div>
