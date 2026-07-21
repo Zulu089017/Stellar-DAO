@@ -98,9 +98,13 @@ export class EventSubscription {
     };
 
     for (const [event, handlers] of this.handlers.entries()) {
-      this.eventSource.addEventListener(event, (msg: MessageEvent) => {
+      // TypeScript's EventSource.addEventListener types don't account
+      // for custom SSE event names returning MessageEvent. At runtime,
+      // all SSE events carry a data field. We cast to satisfy tsc.
+      const listener = (evt: Event) => {
+        const msg = evt as MessageEvent<string>;
         try {
-          const data = JSON.parse(msg.data as string);
+          const data = JSON.parse(msg.data);
           for (const handler of handlers) {
             handler(data);
           }
@@ -108,7 +112,11 @@ export class EventSubscription {
           // Skip unparseable events — the SSE spec allows
           // non-JSON keepalive comments and multi-line payloads.
         }
-      });
+      };
+      this.eventSource.addEventListener(
+        event as keyof EventSourceEventMap,
+        listener as EventListener,
+      );
     }
   }
 
