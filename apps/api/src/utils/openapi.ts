@@ -76,7 +76,7 @@ function getRegisteredRoutes(app: FastifyInstance): RouteInfo[] {
 /**
  * Build an OpenAPI 3.1 spec from the Fastify instance's route table.
  */
-export function buildOpenApiSpec(app: FastifyInstance): OpenApiSpec {
+export function buildOpenApiSpec(_app: FastifyInstance): OpenApiSpec {
   const routes = getRegisteredRoutes(app);
   const paths: Record<string, Record<string, unknown>> = {};
 
