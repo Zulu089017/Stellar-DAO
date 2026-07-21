@@ -1,4 +1,4 @@
-use soroban_sdk::{BytesN, Env, Map, Vec};
+use soroban_sdk::{Bytes, BytesN, Env, Map, Vec};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum AttestationError {
@@ -69,7 +69,7 @@ impl AttestationVerifier for Ed25519Verifier {
         // message — ed25519 will internally hash again with SHA-512,
         // which is cryptographically sound (both signer and verifier
         // operate on the same 32-byte digest).
-        let msg: soroban_sdk::Bytes = digest.clone().into();
+        let msg: Bytes = digest.clone().into();
         env.crypto()
             .ed25519_verify(public_key, &msg, signature)
             .is_ok()
