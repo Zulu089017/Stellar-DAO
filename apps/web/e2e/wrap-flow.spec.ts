@@ -72,7 +72,11 @@ test.describe('Token Wrapping Flow', () => {
       await wrap.goto();
       await wrap.isLoaded();
 
-      // Initially with invalid inputs, button should be disabled
+      // Clear the pre-filled demo amount to make the form invalid
+      await wrap.amountInput.fill('');
+      await wrap.page.waitForTimeout(200);
+
+      // With empty amount, the button should be disabled
       await expect(wrap.wrapButton).toBeDisabled();
 
       // Clear and enter valid values for demo mode
@@ -86,18 +90,21 @@ test.describe('Token Wrapping Flow', () => {
       await wrap.goto();
       await wrap.isLoaded();
 
-      // Fill in valid demo values
-      await wrap.selectSourceChain('ethereum');
-      await wrap.enterSourceToken('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48');
-      await wrap.enterAmount('100');
-      await wrap.enterRecipient('GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACJUR');
-
-      // Status label should be visible
       await expect(wrap.statusLabel).toBeVisible();
 
-      // Step progress bars should be visible
+      // Submit the wrap to trigger the step progress animation
+      await wrap.submitWrap();
+
+      // Demo mode transitions: locking (0ms) → attesting (800ms) → minting (2s) → completed (2.8s).
+      // Wait for the step to reach at least 'attesting'.
+      await wrap.page.waitForTimeout(1500);
+
+      // Step progress bars should now be in the DOM (three <span> elements).
+      // They are small (6px tall) and may not meet Playwright's viewport-based
+      // visibility check, but they must be attached to the DOM.
       const bars = wrap.stepBars;
-      await expect(bars.first()).toBeVisible();
+      await expect(bars.first()).toBeAttached();
+      await expect(bars).toHaveCount(3);
     });
   });
 

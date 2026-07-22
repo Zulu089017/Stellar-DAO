@@ -46,7 +46,8 @@ test.describe('Governance Voting', () => {
 
       const filters = ['all', 'active', 'succeeded', 'executed'];
       for (const filter of filters) {
-        const btn = page.getByRole('button', { name: new RegExp(filter, 'i') });
+        // Use exact word-boundary match to avoid "Connect wallet" matching /all/i
+        const btn = page.getByRole('button', { name: new RegExp(`^${filter}$`, 'i') });
         await expect(btn).toBeVisible();
         await btn.click();
         await page.waitForTimeout(300);

@@ -54,7 +54,8 @@ export class NavigationComponent {
   }
 
   get themeToggle() {
-    return this.page.locator('button[aria-label*="theme" i], button[aria-label*="toggle" i]');
+    // Match the actual aria-label: "Switch to dark mode" or "Switch to light mode"
+    return this.page.locator('button[aria-label*="mode" i]');
   }
 
   get mobileMenuButton() {
@@ -236,7 +237,8 @@ export class GovernancePage {
   }
 
   async clickFilter(filter: string) {
-    const btn = this.page.getByRole('button', { name: new RegExp(filter, 'i') });
+    // Use exact word-boundary match to avoid "Connect wallet" matching /all/i
+    const btn = this.page.getByRole('button', { name: new RegExp(`^${filter}$`, 'i') });
     if (await btn.isVisible()) {
       await btn.click();
       await this.page.waitForTimeout(300);
@@ -264,7 +266,9 @@ export class AnalyticsPage {
   }
 
   get heading() {
-    return this.page.getByRole('heading', { name: /analytics/i });
+    // Scope to h1 only — the top-nav also contains an "Analytics" link
+    // that getByRole('heading') may resolve to on certain viewports.
+    return this.page.getByRole('heading', { name: /analytics/i, level: 1 });
   }
 
   async isLoaded() {

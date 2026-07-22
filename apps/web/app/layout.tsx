@@ -27,16 +27,16 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${mono.variable}`}>
-      <body className="min-h-screen bg-aurora-gradient text-stellar-cloud">
+    <html lang="en" className={`${inter.variable} ${mono.variable}`} style={{ overflowX: 'clip' }}>
+      <body className="min-h-screen bg-aurora-gradient text-stellar-cloud" style={{ overflowX: 'clip' }}>
         <Providers>
           <TopNav />
           <ErrorBoundary>
-            <main className="mx-auto max-w-7xl px-6 pb-24 pt-10 lg:px-10">
+            <main className="mx-auto max-w-7xl px-4 pb-24 pt-10 sm:px-6 lg:px-10">
               {children}
             </main>
           </ErrorBoundary>
-          <footer className="mx-auto max-w-7xl px-6 pb-10 text-xs text-stellar-haze lg:px-10">
+          <footer className="mx-auto max-w-7xl px-4 pb-10 text-xs text-stellar-haze sm:px-6 lg:px-10">
             StellarDAO is an open-source scaffold — never commit funds; always verify
             contract IDs against the latest release.
           </footer>
