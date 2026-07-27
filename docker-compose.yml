@@ -5,11 +5,18 @@
 #   • Web         — Next.js 15 dashboard on :3000
 #   • Relayer     — Cross-chain event watcher
 #
+# Profiles:
+#   • default (no --profile) — development with hot-reload
+#   • production             — optimized builds, healthchecks, restart policies
+#   • monitoring             — Prometheus + Grafana (production only)
+#
 # Usage:
-#   docker compose up -d              # Start everything
-#   docker compose up api web         # Start specific services
-#   docker compose down               # Stop and remove containers
-#   docker compose logs -f api        # Tail API logs
+#   docker compose up -d                           # Dev stack
+#   docker compose --profile production up -d       # Production stack
+#   docker compose --profile production --profile monitoring up -d  # + metrics
+#   docker compose up api web                      # Start specific services
+#   docker compose down                            # Stop and remove containers
+#   docker compose logs -f api                     # Tail API logs
 
 version: '3.9'
 
@@ -112,5 +119,46 @@ services:
     depends_on:
       - api
 
+  # ── Prometheus (monitoring profile) ─────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: stellardao-prometheus
+    restart: unless-stopped
+    profiles: ['monitoring', 'production']
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+    depends_on:
+      - api
+
+  # ── Grafana (monitoring profile) ────────────────────────────
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: stellardao-grafana
+    restart: unless-stopped
+    profiles: ['monitoring', 'production']
+    ports:
+      - '3030:3000'
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: stellardao
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/stellardao.json
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana-dashboards:/etc/grafana/dashboards:ro
+      - ./docker/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./docker/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+    depends_on:
+      - prometheus
+
 volumes:
   pgdata:
+  prometheus_data:
+  grafana_data:

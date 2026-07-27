@@ -1,0 +1,12 @@
+# Grafana dashboard provisioning for StellarDAO
+apiVersion: 1
+
+providers:
+  - name: 'StellarDAO'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: true
+    editable: false
+    options:
+      path: /etc/grafana/dashboards

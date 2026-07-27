@@ -1,0 +1,35 @@
+# Prometheus configuration for StellarDAO
+# Scrapes the API health/metrics endpoint and PostgreSQL metrics.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: stellardao
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  - job_name: 'stellardao-api'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['api:4000']
+        labels:
+          service: 'stellardao-api'
+          env: 'production'
+
+  - job_name: 'stellardao-postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+        labels:
+          service: 'stellardao-postgres'
+          env: 'production'
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
