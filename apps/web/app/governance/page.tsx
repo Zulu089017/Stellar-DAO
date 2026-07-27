@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { DelegationPanel } from '@/components/governance/delegation-panel';
 import { ProposalList } from '@/components/governance/proposal-list';
 
 export const metadata: Metadata = {
@@ -43,12 +44,7 @@ export default function GovernancePage() {
             </dl>
           </div>
 
-          <div className="rounded-xl border border-white/5 bg-white/[0.03] p-5">
-            <h3 className="text-sm font-semibold text-white">Your Delegation</h3>
-            <p className="mt-2 text-xs text-stellar-haze">
-              Connect your wallet to view your voting power and delegate.
-            </p>
-          </div>
+          <DelegationPanel />
         </aside>
       </div>
     </div>
