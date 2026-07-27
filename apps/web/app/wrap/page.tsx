@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 
+import { FeeCalculator } from '@/components/wrap/fee-calculator';
 import { WrapPanel } from '@/components/wrap/wrap-panel';
 
 export const metadata: Metadata = {
@@ -24,6 +25,7 @@ export default function WrapPage() {
         <WrapPanel />
       </section>
       <aside className="space-y-6">
+        <FeeCalculator amount="100" sourceChain="ethereum" />
         <div className="glass-panel rounded-2xl p-6">
           <h2 className="text-sm font-semibold uppercase tracking-widest text-stellar-haze">How a wrap settles</h2>
           <ol className="mt-4 space-y-4 text-sm text-stellar-cloud">
