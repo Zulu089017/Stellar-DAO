@@ -4,6 +4,7 @@ import { AssetsTable } from '@/components/dashboard/assets-table';
 import { TransactionFeed } from '@/components/dashboard/transaction-feed';
 import { LiveStats } from '@/components/dashboard/live-stats';
 import { BridgeDiagram } from '@/components/landing/bridge-diagram';
+import { FaqSection } from '@/components/landing/faq-section';
 import { serverApi } from '@/lib/server-api';
 
 export default async function HomePage() {
@@ -94,6 +95,9 @@ export default async function HomePage() {
         </div>
         <TransactionFeed initial={transactions.transactions} />
       </section>
+
+      {/* ── FAQ ──────────────────────────────────────────────── */}
+      <FaqSection />
     </div>
   );
 }
