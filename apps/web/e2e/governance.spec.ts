@@ -14,7 +14,7 @@ test.describe('Governance Voting', () => {
       ).toBeVisible();
 
       await expect(governance.page.getByText('Governance Stats')).toBeVisible();
-      await expect(governance.page.getByText('Your Delegation')).toBeVisible();
+      await expect(governance.page.getByText('Delegate Voting Power')).toBeVisible();
     });
 
     test('displays governance statistics card', async ({ governance }) => {
@@ -27,16 +27,21 @@ test.describe('Governance Voting', () => {
       await expect(governance.page.getByText('Timelock Delay')).toBeVisible();
 
       await expect(governance.page.getByText(/7 days/)).toBeVisible();
-      await expect(governance.page.getByText(/4%/)).toBeVisible();
+      // Scope 4% to the stat card (dl) to avoid matching 14.4% in delegation panel
+      await expect(governance.page.locator('dl').getByText(/4%/)).toBeVisible();
       await expect(governance.page.getByText(/2 days/)).toBeVisible();
     });
 
-    test('delegation panel shows wallet connect prompt', async ({ governance }) => {
+    test('delegation panel shows delegate voting power form', async ({ governance }) => {
       await governance.goto();
       await governance.isLoaded();
 
+      // The DelegationPanel shows a delegation form with address input.
       await expect(
-        governance.page.getByText(/connect your wallet/i),
+        governance.page.getByText(/delegate voting power/i),
+      ).toBeVisible();
+      await expect(
+        governance.page.getByPlaceholder(/GABCDEFGHIJKLMNOPQRSTUVWXYZ/i),
       ).toBeVisible();
     });
 

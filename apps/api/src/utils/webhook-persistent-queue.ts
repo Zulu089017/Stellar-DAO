@@ -177,7 +177,7 @@ export class PersistentWebhookQueue {
   /**
    * Replay a dead-letter entry by re-enqueueing it as a fresh job.
    */
-  async replayDeadLetter(deadLetterId: string): Promise<PersistentWebhookJob | null> {
+  async replayDeadLetter(_deadLetterId: string): Promise<PersistentWebhookJob | null> {
     // In production: SELECT from webhook_dead_letters, INSERT INTO webhook_jobs.
     return null;
   }
