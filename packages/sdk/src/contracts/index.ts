@@ -19,13 +19,13 @@
  * ## Usage
  *
  * ```ts
- * import { createBridgeClient, createFactoryClient } from '@stellardao/sdk';
+ * import { BridgeContract, FactoryContract } from '@stellardao/sdk';
  *
- * const bridge = createBridgeClient('C...bridge');
- * await bridge.submitMint(payload, attestations);
+ * const bridge = new BridgeContract('C...bridge');
+ * const op = bridge.buildMint({ ... });
  *
- * const factory = createFactoryClient('C...factory');
- * const addr = await factory.createWrapper('ethereum', '0x...token');
+ * const factory = new FactoryContract('C...factory');
+ * const deployOp = factory.buildCreateWrapperAsset(adminPK, input);
  * ```
  *
  * All contract clients are instantiated via factory functions that
@@ -39,14 +39,14 @@
  * @packageDocumentation
  */
 
-export { createBridgeClient } from './bridge.js';
-export type { BridgeClient } from './bridge.js';
+export { BridgeContract } from './bridge.js';
+export type { BridgeInvokeOptions } from './bridge.js';
 
-export { createFactoryClient } from './factory.js';
-export type { FactoryClient } from './factory.js';
+export { FactoryContract } from './factory.js';
+export type { CreateWrapperInput, FactoryInvokeOptions } from './factory.js';
 
-export { createWrapperTokenClient } from './wrapper-token.js';
-export type { WrapperTokenClient } from './wrapper-token.js';
+export { WrapperTokenContract } from './wrapper-token.js';
+export type { TokenMetadata } from './wrapper-token.js';
 
 export {
   createGovernanceClient,
