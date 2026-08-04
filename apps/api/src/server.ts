@@ -33,6 +33,7 @@ import { registerSseBridge } from './sse/horizon-bridge.js';
 import { registerGovernanceSse } from './sse/governance-bridge.js';
 import { rateLimitPlugin } from './middleware/rate-limit.js';
 import { apiKeyAuthPlugin } from './middleware/api-key-auth.js';
+import { auditLogPlugin } from './middleware/audit-log.js';
 import { jwtAuthPlugin } from './middleware/jwt-auth.js';
 import { rbacPlugin } from './middleware/rbac.js';
 import { sanitizePlugin } from './middleware/sanitize.js';
@@ -114,11 +115,18 @@ export const createServer = async (opts: ServerOptions = {}): Promise<FastifyIns
   await initInvoiceRepository(env.DATABASE_URL);
   await initTransactionRepository(env.DATABASE_URL);
 
-  await app.register(rateLimitPlugin);
-  await app.register(apiKeyAuthPlugin);
-  await app.register(jwtAuthPlugin);
-  await app.register(rbacPlugin);
-  await app.register(sanitizePlugin);
+  // IMPORTANT: Middleware plugins are called directly (not via
+  // `app.register()`) so their hooks run in the root encapsulation
+  // context. Fastify hooks do NOT propagate across sibling plugin
+  // contexts, so `app.register(middleware)` would silently prevent
+  // all middleware hooks from firing for routes registered via
+  // `app.register(routePlugin)`.
+  await auditLogPlugin(app);
+  await rateLimitPlugin(app);
+  await apiKeyAuthPlugin(app);
+  await jwtAuthPlugin(app);
+  await rbacPlugin(app);
+  await sanitizePlugin(app);
 
   await app.register(healthRoutes, { prefix: '/health' });
   await app.register(assetRoutes, { prefix: '/assets' });
