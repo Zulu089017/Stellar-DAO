@@ -5,6 +5,7 @@ import './globals.css';
 
 import { Providers } from './providers';
 
+import { CommandPalette, CommandPaletteGlobalShortcut } from '@/components/command-palette';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { TopNav } from '@/components/nav/top-nav';
 import { ToastContainer } from '@/components/toast';
@@ -112,6 +113,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         style={{ overflowX: 'clip' }}
       >
         <Providers>
+          <CommandPaletteGlobalShortcut />
           <TopNav />
           <ErrorBoundary>
             <main className="mx-auto max-w-7xl px-4 pb-24 pt-10 sm:px-6 lg:px-10">{children}</main>
@@ -120,6 +122,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             Stellar Payment Gateway is an open-source scaffold — never commit funds; always verify
             contract IDs against the latest release.
           </footer>
+          <CommandPalette />
           <ToastContainer />
         </Providers>
       </body>
