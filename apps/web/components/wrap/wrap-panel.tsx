@@ -44,24 +44,43 @@ function txStatusToStep(status: TxStatus): WrapStep {
 // useEffect. The `as string | undefined` cast narrows the env type so the
 // `.startsWith` chain below type-checks cleanly under strict mode.
 const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === 'true';
-const BRIDGE_READY = Boolean(
-  (process.env.NEXT_PUBLIC_BRIDGE_CONTRACT_ID ?? '').startsWith('C'),
-);
+const BRIDGE_READY = Boolean((process.env.NEXT_PUBLIC_BRIDGE_CONTRACT_ID ?? '').startsWith('C'));
 
 const DEFAULT_WRAPPER_TOKEN = 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM';
 
 /** Pick a deterministic demo wrapper-token for the demo flow. */
-const DEMO_WRAPPER_TOKEN =
-  process.env.NEXT_PUBLIC_DEMO_WRAPPER_TOKEN ?? DEFAULT_WRAPPER_TOKEN;
+const DEMO_WRAPPER_TOKEN = process.env.NEXT_PUBLIC_DEMO_WRAPPER_TOKEN ?? DEFAULT_WRAPPER_TOKEN;
 
-export const WrapPanel = () => {
-  const [chain, setChain] = useState<SourceChainId>('ethereum');
-  const [token, setToken] = useState('0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48'); // USDC mainnet
-  const [amount, setAmount] = useState('100');
-  const [recipient, setRecipient] = useState('GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACJUR');
+export interface WrapPanelInitialValues {
+  chain?: SourceChainId;
+  token?: string;
+  amount?: string;
+  recipient?: string;
+}
+
+interface WrapPanelProps {
+  initialValues?: WrapPanelInitialValues;
+  /** Called whenever form values change — used by payment link sharing */
+  onValuesChange?: (values: WrapPanelInitialValues) => void;
+}
+
+export const WrapPanel = ({ initialValues, onValuesChange }: WrapPanelProps = {}) => {
+  const [chain, setChain] = useState<SourceChainId>(initialValues?.chain ?? 'ethereum');
+  const [token, setToken] = useState(
+    initialValues?.token ?? '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  );
+  const [amount, setAmount] = useState(initialValues?.amount ?? '100');
+  const [recipient, setRecipient] = useState(
+    initialValues?.recipient ?? 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACJUR',
+  );
   const [step, setStep] = useState<WrapStep>('idle');
   const [txId, setTxId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Notify parent of value changes for payment link sharing
+  useEffect(() => {
+    onValuesChange?.({ chain, token, amount, recipient });
+  }, [chain, token, amount, recipient, onValuesChange]);
 
   const valid = isValidAddress(chain, token) && Number(amount) > 0 && recipient.startsWith('G');
 
@@ -150,7 +169,9 @@ export const WrapPanel = () => {
           </select>
         </label>
         <label className="space-y-2 text-sm">
-          <span className="text-xs uppercase tracking-widest text-stellar-haze">Source token address</span>
+          <span className="text-xs uppercase tracking-widest text-stellar-haze">
+            Source token address
+          </span>
           <input
             value={token}
             onChange={(e) => setToken(e.target.value)}
@@ -174,7 +195,9 @@ export const WrapPanel = () => {
           />
         </label>
         <label className="space-y-2 text-sm">
-          <span className="text-xs uppercase tracking-widest text-stellar-haze">Stellar recipient</span>
+          <span className="text-xs uppercase tracking-widest text-stellar-haze">
+            Stellar recipient
+          </span>
           <input
             value={recipient}
             onChange={(e) => setRecipient(e.target.value)}
@@ -188,9 +211,7 @@ export const WrapPanel = () => {
           <p className="text-xs uppercase tracking-widest text-stellar-haze">Status</p>
           <p className="text-sm text-stellar-cloud">{stepLabel[step]}</p>
           {txId && (
-            <p className="mono mt-1 text-[11px] text-stellar-haze">
-              tx · {txId.slice(0, 16)}…
-            </p>
+            <p className="mono mt-1 text-[11px] text-stellar-haze">tx · {txId.slice(0, 16)}…</p>
           )}
           {error && <p className="mt-1 text-xs text-rose-400">{error}</p>}
         </div>
@@ -220,7 +241,9 @@ export const WrapPanel = () => {
             step === 'locking' ||
             step === 'attesting' ||
             step === 'minting' ||
-            (!DEMO_MODE && !process.env.NEXT_PUBLIC_BRIDGE_CONTRACT_ID && !process.env.NEXT_PUBLIC_API_BASE_URL)
+            (!DEMO_MODE &&
+              !process.env.NEXT_PUBLIC_BRIDGE_CONTRACT_ID &&
+              !process.env.NEXT_PUBLIC_API_BASE_URL)
           }
         >
           {step === 'idle' || step === 'completed' || step === 'failed' ? 'Wrap →' : 'Working…'}
