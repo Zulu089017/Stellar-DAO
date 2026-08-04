@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     'ERC-20', 'SPL', 'Polygon', 'DAO', 'governance', 'blockchain',
     'wrapped tokens', 'DeFi', 'Horizon',
   ],
-  authors: [{ name: 'Stellar Payment Gateway Contributors', url: 'https://github.com/Zulu089017/Stellar-DAO' }],
+  authors: [{ name: 'Stellar Payment Gateway Contributors', url: 'https://github.com/stellar-payment-gateway/stellar-payment-gateway-sdk-main' }],
   creator: 'Stellar Payment Gateway',
   publisher: 'Stellar Payment Gateway',
   formatDetection: {

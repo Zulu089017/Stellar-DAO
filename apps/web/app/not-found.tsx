@@ -62,7 +62,7 @@ export default function NotFound() {
       <p className="max-w-md text-xs text-stellar-haze/60">
         Think this page should exist?{' '}
         <a
-          href="https://github.com/Zulu089017/Stellar-DAO/issues/new?template=bug_report.md"
+          href="https://github.com/stellar-payment-gateway/stellar-payment-gateway-sdk-main/issues/new?template=bug_report.md"
           target="_blank"
           rel="noopener noreferrer"
           className="underline hover:text-stellar-cloud"

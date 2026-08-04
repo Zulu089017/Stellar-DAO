@@ -15,7 +15,7 @@ export async function verifyContractOnExplorer(
     version: '0.1.0',
     compiler: 'soroban-sdk 21.7.7',
     optimizer: 'z',
-    repository: 'https://github.com/Zulu089017/Stellar-DAO',
+    repository: 'https://github.com/stellar-payment-gateway/stellar-payment-gateway-sdk-main',
     commit: process.env.GITHUB_SHA ?? 'unknown',
   };
 

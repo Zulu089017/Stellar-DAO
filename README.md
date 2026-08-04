@@ -1,6 +1,6 @@
 # Stellar Payment Gateway
 
-[![CI](https://github.com/Zulu089017/Stellar-DAO/actions/workflows/ci.yml/badge.svg)](https://github.com/Zulu089017/Stellar-DAO/actions/workflows/ci.yml)
+[![CI](https://github.com/stellar-payment-gateway/stellar-payment-gateway-sdk-main/actions/workflows/ci.yml/badge.svg)](https://github.com/stellar-payment-gateway/stellar-payment-gateway-sdk-main/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![pnpm 9+](https://img.shields.io/badge/pnpm-9%2B-orange)](https://pnpm.io)
 [![Node 20.11+](https://img.shields.io/badge/node-20.11%2B-green)](https://nodejs.org)

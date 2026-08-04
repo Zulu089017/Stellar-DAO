@@ -1,12 +1,12 @@
 /**
  * Database migration — initial schema.
  *
- * Creates the core tables for the StellarDAO API:
+ * Creates the core tables for the Stellar Payment Gateway API:
  *   • assets         — wrapped asset registry
  *   • transactions   — bridge transaction lifecycle
  *   • api_keys       — API key management
  *
- * Run via:  pnpm --filter @stellardao/api drizzle-kit push
+ * Run via:  pnpm --filter @stellar-payment-gateway/api drizzle-kit push
  */
 
 import { pgTable, text, timestamp, integer, numeric, pgEnum, uniqueIndex } from 'drizzle-orm/pg-core';

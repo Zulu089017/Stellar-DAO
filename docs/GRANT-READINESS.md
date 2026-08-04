@@ -12,7 +12,7 @@ open-source contributors through bounty sprints on GitHub.
 
 | Criteria | Status | Notes |
 |----------|--------|-------|
-| Public GitHub repository | ✅ | github.com/Zulu089017/Stellar-DAO |
+| Public GitHub repository | ✅ | github.com/stellar-payment-gateway/stellar-payment-gateway-sdk-main |
 | Open-source license (MIT) | ✅ | See LICENSE |
 | CONTRIBUTING.md with setup | ✅ | Includes full dev setup flow |
 | Well-scoped GitHub issues | ✅ | Bug report + feature request templates |

@@ -40,7 +40,7 @@ if [[ -z "${COMMIT_URL_BASE:-}" ]]; then
   if [[ "$remote_url" =~ github\.com[:/]([^/]+)/([^/]+)(\.git)?$ ]]; then
     COMMIT_URL_BASE="https://github.com/${BASH_REMATCH[1]}/${BASH_REMATCH[2]}/commit"
   else
-    COMMIT_URL_BASE="https://github.com/Zulu089017/Stellar-DAO/commit"
+    COMMIT_URL_BASE="https://github.com/stellar-payment-gateway/stellar-payment-gateway-sdk-main/commit"
   fi
 fi
 

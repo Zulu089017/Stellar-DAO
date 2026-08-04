@@ -1,4 +1,4 @@
-# ── StellarDAO pre-commit hooks ────────────────────────────────
+# ── Stellar Payment Gateway pre-commit hooks ────────────────────────────────
 # Runs on every `git commit`. Keeps the repo clean without
 # waiting for CI to catch issues.
 #
