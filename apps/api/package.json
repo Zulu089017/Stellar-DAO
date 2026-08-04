@@ -31,7 +31,7 @@
   "devDependencies": {
     "@stellar-payment-gateway/eslint-config": "workspace:*",
     "@stellar-payment-gateway/tsconfig": "workspace:*",
-    "@types/node": "^20.14.10",
+    "@types/node": "^26.1.2",
     "@types/pg": "^8.11.10",
     "@vitest/coverage-v8": "^2.1.9",
     "drizzle-kit": "^0.27.2",
