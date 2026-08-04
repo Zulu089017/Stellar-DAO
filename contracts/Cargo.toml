@@ -7,6 +7,8 @@ members = [
     "governance-token",
     "governance",
     "timelock",
+    "payment",
+    "escrow",
 ]
 
 [workspace.package]
