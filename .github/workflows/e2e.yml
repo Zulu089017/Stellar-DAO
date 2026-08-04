@@ -111,7 +111,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Download .next build cache
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: next-build
           path: apps/web/.next
