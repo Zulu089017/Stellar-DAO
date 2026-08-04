@@ -1,0 +1,9 @@
+# ── Stellar Payment Gateway commit-msg hook ────────────────────────────
+# Enforces Conventional Commits via commitlint.
+# Runs after the user saves the commit message but before the commit
+# is finalised. If the message doesn't match the spec the commit is
+# rejected with a helpful error.
+
+echo "📝 Validating commit message…"
+
+pnpm exec commitlint --edit "$1"

@@ -1,0 +1,64 @@
+version: 2
+updates:
+  # ── npm / pnpm dependencies (root + all workspace packages) ──────
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 10
+    versioning-strategy: 'auto'
+    labels:
+      - 'dependencies'
+      - 'javascript'
+    commit-message:
+      prefix: 'chore'
+      prefix-development: 'chore'
+      include: 'scope'
+    groups:
+      typescript-eslint:
+        patterns:
+          - '@typescript-eslint/*'
+          - 'typescript'
+          - 'eslint'
+      react:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
+      nextjs:
+        patterns:
+          - 'next'
+          - '@next/*'
+          - 'eslint-config-next'
+
+  # ── Rust / Cargo dependencies (contracts workspace) ──────────────
+  - package-ecosystem: 'cargo'
+    directory: '/contracts'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 5
+    labels:
+      - 'dependencies'
+      - 'rust'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+
+  # ── GitHub Actions ───────────────────────────────────────────────
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    labels:
+      - 'dependencies'
+      - 'ci'
+    commit-message:
+      prefix: 'ci'
+      include: 'scope'
