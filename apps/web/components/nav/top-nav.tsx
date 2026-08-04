@@ -16,6 +16,7 @@ const navItems = [
   { href: '/transactions', label: 'Transactions' },
   { href: '/governance', label: 'Governance' },
   { href: '/analytics', label: 'Analytics' },
+  { href: '/invoices', label: 'Invoices' },
 ];
 
 export const TopNav = () => {

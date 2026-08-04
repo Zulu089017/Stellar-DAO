@@ -1,13 +1,14 @@
 /**
- * Wallet connector — Freighter + Albedo integration for the Stellar Payment Gateway dashboard.
+ * Wallet connector — Freighter + xBull + Albedo integration for the
+ * Stellar Payment Gateway dashboard.
  *
  * Supports:
  *   - Freighter browser extension
+ *   - xBull browser extension
  *   - Albedo web wallet
  *   - Deterministic mock wallet (dev fallback)
  *
- * The connector auto-detects available wallets and prefers Freighter
- * when both are installed.
+ * Auto-detects available wallets. Priority: Freighter > xBull > Albedo > mock.
  */
 
 const MOCK_DEMO_PUBLIC_KEY = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACJUR';
@@ -19,17 +20,30 @@ interface FreighterApi {
   getNetwork?(): Promise<string>;
 }
 
+interface XBullApi {
+  connect(): Promise<string>;
+  getPublicKey(): Promise<string>;
+  signTransaction(xdr: string, opts?: { networkPassphrase?: string }): Promise<string>;
+  closeConnections?(): Promise<void>;
+}
+
 interface AlbedoApi {
   publicKey(): Promise<{ pubkey: string }>;
   tx(xdr: string): Promise<{ signed_envelope_xdr: string }>;
 }
 
-type WalletProvider = 'freighter' | 'albedo' | 'mock';
+type WalletProvider = 'freighter' | 'xbull' | 'albedo' | 'mock';
 
 function getFreighter(): FreighterApi | null {
   if (typeof window === 'undefined') return null;
   const w = window as unknown as { freighterApi?: FreighterApi };
   return w.freighterApi ?? null;
+}
+
+function getXBull(): XBullApi | null {
+  if (typeof window === 'undefined') return null;
+  const w = window as unknown as { xBullSDK?: XBullApi };
+  return w.xBullSDK ?? null;
 }
 
 function getAlbedo(): AlbedoApi | null {
@@ -40,6 +54,7 @@ function getAlbedo(): AlbedoApi | null {
 
 function detectProvider(): WalletProvider {
   if (getFreighter()) return 'freighter';
+  if (getXBull()) return 'xbull';
   if (getAlbedo()) return 'albedo';
   return 'mock';
 }
@@ -49,12 +64,16 @@ export const WalletConnector = {
     return getFreighter() !== null;
   },
 
+  isXBullAvailable(): boolean {
+    return getXBull() !== null;
+  },
+
   isAlbedoAvailable(): boolean {
     return getAlbedo() !== null;
   },
 
   isAvailable(): boolean {
-    return this.isFreighterAvailable() || this.isAlbedoAvailable();
+    return this.isFreighterAvailable() || this.isXBullAvailable() || this.isAlbedoAvailable();
   },
 
   provider(): WalletProvider {
@@ -70,13 +89,18 @@ export const WalletConnector = {
       return { pubKey, provider };
     }
 
+    if (provider === 'xbull') {
+      const api = getXBull()!;
+      const pubKey = await api.connect();
+      return { pubKey, provider };
+    }
+
     if (provider === 'albedo') {
       const api = getAlbedo()!;
       const result = await api.publicKey();
       return { pubKey: result.pubkey, provider };
     }
 
-    // Mock fallback for development.
     return { pubKey: MOCK_DEMO_PUBLIC_KEY, provider: 'mock' };
   },
 
@@ -86,6 +110,9 @@ export const WalletConnector = {
     try {
       if (provider === 'freighter') {
         return await getFreighter()!.getPublicKey();
+      }
+      if (provider === 'xbull') {
+        return await getXBull()!.getPublicKey();
       }
       if (provider === 'albedo') {
         const result = await getAlbedo()!.publicKey();
@@ -110,6 +137,12 @@ export const WalletConnector = {
       return api.signTransaction(xdr, { networkPassphrase });
     }
 
+    if (provider === 'xbull') {
+      const api = getXBull();
+      if (!api) throw new Error('xBull not available');
+      return api.signTransaction(xdr, { networkPassphrase });
+    }
+
     if (provider === 'albedo') {
       const api = getAlbedo();
       if (!api) throw new Error('Albedo not available');
@@ -118,5 +151,14 @@ export const WalletConnector = {
     }
 
     throw new Error('No wallet provider available');
+  },
+
+  async disconnect(): Promise<void> {
+    const provider = detectProvider();
+    if (provider === 'xbull') {
+      try {
+        await getXBull()?.closeConnections?.();
+      } catch { /* ignore */ }
+    }
   },
 };
