@@ -26,9 +26,9 @@
     "@stellar-payment-gateway/tsconfig": "workspace:*",
     "@types/react": "^18.3.12",
     "react": "^19.0.0-rc-66855b96-20241106",
-    "typescript": "^5.6.3",
+    "typescript": "^7.0.2",
     "vitest": "^2.1.4",
-    "eslint": "^9.13.0"
+    "eslint": "^10.8.0"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
