@@ -11,6 +11,7 @@ import type {
 } from '@stellar-payment-gateway/shared';
 
 import { invoiceRepository } from '../db/repositories/invoice-repository.js';
+import { requireAuth } from '../middleware/rbac.js';
 
 const CreateInvoiceSchema = z.object({
   payer: z.string().min(1),
@@ -28,15 +29,13 @@ export const invoiceRoutes = async (app: FastifyInstance): Promise<void> => {
   /** Create an invoice. The authenticated caller becomes the creator. */
   app.post<{ Body: CreateInvoiceRequest }>(
     '/',
+    { preHandler: [requireAuth] },
     async (req, reply): Promise<CreateInvoiceResponse> => {
       const parsed = CreateInvoiceSchema.safeParse(req.body);
       if (!parsed.success) return reply.badRequest(parsed.error.message);
 
       const { payer, token, totalAmount, expirationLedger, memo } = parsed.data;
-      const creator = req.headers['x-authenticated-address'] as string | undefined;
-      if (!creator) {
-        return reply.unauthorized('missing x-authenticated-address header');
-      }
+      const creator = req.user!.sub;
 
       const invoice: Invoice = {
         id: randomUUID(),
@@ -76,11 +75,12 @@ export const invoiceRoutes = async (app: FastifyInstance): Promise<void> => {
   /** Pay an invoice (full or partial). Only the designated payer can call this. */
   app.patch<{ Params: { id: string }; Body: PayInvoiceRequest }>(
     '/:id/pay',
+    { preHandler: [requireAuth] },
     async (req, reply) => {
       const parsed = PayInvoiceSchema.safeParse(req.body);
       if (!parsed.success) return reply.badRequest(parsed.error.message);
 
-      const payer = req.headers['x-authenticated-address'] as string | undefined;
+      const payer = req.user!.sub;
       if (!payer) {
         return reply.unauthorized('missing x-authenticated-address header');
       }
@@ -110,11 +110,9 @@ export const invoiceRoutes = async (app: FastifyInstance): Promise<void> => {
   /** Cancel an invoice. Only the creator can cancel. */
   app.delete<{ Params: { id: string } }>(
     '/:id',
+    { preHandler: [requireAuth] },
     async (req, reply) => {
-      const creator = req.headers['x-authenticated-address'] as string | undefined;
-      if (!creator) {
-        return reply.unauthorized('missing x-authenticated-address header');
-      }
+      const creator = req.user!.sub;
 
       const invoice = await invoiceRepository.findById(req.params.id);
       if (!invoice) return reply.notFound('invoice not found');

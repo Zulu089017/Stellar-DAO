@@ -9,6 +9,8 @@ import type {
   RotateApiKeyResponse,
 } from '@stellar-payment-gateway/shared';
 
+import { requireRole } from '../middleware/rbac.js';
+
 const HMAC_SECRET = process.env.RELAYER_HMAC_SECRET ?? 'dev-secret';
 
 const hashApiKey = (key: string): string =>
@@ -103,9 +105,10 @@ export const merchantRoutes = async (app: FastifyInstance): Promise<void> => {
     },
   );
 
-  /** Update merchant profile. Authenticated merchant only. */
+  /** Update merchant profile. Authenticated merchant or admin only. */
   app.patch<{ Params: { id: string } }>(
     '/:id',
+    { preHandler: [requireRole('merchant', 'admin')] },
     async (req, reply) => {
       const parsed = UpdateMerchantSchema.safeParse(req.body);
       if (!parsed.success) return reply.badRequest(parsed.error.message);
@@ -129,9 +132,10 @@ export const merchantRoutes = async (app: FastifyInstance): Promise<void> => {
     },
   );
 
-  /** Rotate API key. Returns the new key (only once). */
+  /** Rotate API key. Authenticated merchant or admin only. Returns the new key (only once). */
   app.post<{ Params: { id: string } }>(
     '/:id/rotate-key',
+    { preHandler: [requireRole('merchant', 'admin')] },
     async (req, reply): Promise<RotateApiKeyResponse> => {
       const merchant = await merchantStore.findById(req.params.id);
       if (!merchant) return reply.notFound('merchant not found');

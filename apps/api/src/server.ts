@@ -33,6 +33,8 @@ import { registerSseBridge } from './sse/horizon-bridge.js';
 import { registerGovernanceSse } from './sse/governance-bridge.js';
 import { rateLimitPlugin } from './middleware/rate-limit.js';
 import { apiKeyAuthPlugin } from './middleware/api-key-auth.js';
+import { jwtAuthPlugin } from './middleware/jwt-auth.js';
+import { rbacPlugin } from './middleware/rbac.js';
 import { sanitizePlugin } from './middleware/sanitize.js';
 
 export type ServerOptions = {
@@ -93,6 +95,8 @@ app.decorate(
 
   await app.register(rateLimitPlugin);
   await app.register(apiKeyAuthPlugin);
+  await app.register(jwtAuthPlugin);
+  await app.register(rbacPlugin);
   await app.register(sanitizePlugin);
 
   await app.register(healthRoutes, { prefix: '/health' });
