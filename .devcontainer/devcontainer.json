@@ -1,0 +1,44 @@
+{
+  "name": "Stellar Payment Gateway",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "1.85.0",
+      "profile": "minimal"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "rust-lang.rust-analyzer",
+        "tamasfe.even-better-toml",
+        "ms-playwright.playwright",
+        "vitest.explorer",
+        "ms-azuretools.vscode-docker",
+        "github.vscode-github-actions",
+        "editorconfig.editorconfig"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "typescript.tsdk": "node_modules/typescript/lib"
+      }
+    }
+  },
+  "postCreateCommand": {
+    "pnpm": "corepack enable && corepack prepare pnpm@9.12.0 --activate && pnpm install",
+    "playwright": "pnpm --filter @stellar-payment-gateway/web exec playwright install --with-deps chromium",
+    "wasm": "rustup target add wasm32-unknown-unknown"
+  },
+  "remoteUser": "node",
+  "portsAttributes": {
+    "3000": { "label": "Web App", "onAutoForward": "notify" },
+    "4501": { "label": "API Server", "onAutoForward": "notify" },
+    "9323": { "label": "Playwright Report", "onAutoForward": "silent" }
+  }
+}

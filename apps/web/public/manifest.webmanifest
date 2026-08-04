@@ -1,0 +1,12 @@
+{
+  "name": "Stellar Payment Gateway",
+  "short_name": "StellarPay",
+  "description": "Cross-chain payment platform powered by Stellar and Soroban",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#05070d",
+  "theme_color": "#05070d",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

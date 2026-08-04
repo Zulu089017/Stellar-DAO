@@ -23,11 +23,27 @@ export const metadata: Metadata = {
   description:
     'Spin up wrapped versions of your Ethereum, Solana, or Polygon tokens on Stellar. Real-time settlements confirmed by Horizon — finality in under 5 seconds.',
   keywords: [
-    'Stellar', 'Soroban', 'cross-chain', 'bridge', 'token wrap',
-    'ERC-20', 'SPL', 'Polygon', 'DAO', 'governance', 'blockchain',
-    'wrapped tokens', 'DeFi', 'Horizon',
+    'Stellar',
+    'Soroban',
+    'cross-chain',
+    'bridge',
+    'token wrap',
+    'ERC-20',
+    'SPL',
+    'Polygon',
+    'DAO',
+    'governance',
+    'blockchain',
+    'wrapped tokens',
+    'DeFi',
+    'Horizon',
   ],
-  authors: [{ name: 'Stellar Payment Gateway Contributors', url: 'https://github.com/stellar-payment-gateway/stellar-payment-gateway-sdk-main' }],
+  authors: [
+    {
+      name: 'Stellar Payment Gateway Contributors',
+      url: 'https://github.com/stellar-payment-gateway/stellar-payment-gateway-sdk-main',
+    },
+  ],
   creator: 'Stellar Payment Gateway',
   publisher: 'Stellar Payment Gateway',
   formatDetection: {
@@ -75,8 +91,8 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: '/favicon.svg',
+    apple: '/icon.svg',
   },
   manifest: '/manifest.webmanifest',
   category: 'technology',
@@ -91,13 +107,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${mono.variable}`} style={{ overflowX: 'clip' }}>
-      <body className="min-h-screen bg-aurora-gradient text-stellar-cloud" style={{ overflowX: 'clip' }}>
+      <body
+        className="min-h-screen bg-aurora-gradient text-stellar-cloud"
+        style={{ overflowX: 'clip' }}
+      >
         <Providers>
           <TopNav />
           <ErrorBoundary>
-            <main className="mx-auto max-w-7xl px-4 pb-24 pt-10 sm:px-6 lg:px-10">
-              {children}
-            </main>
+            <main className="mx-auto max-w-7xl px-4 pb-24 pt-10 sm:px-6 lg:px-10">{children}</main>
           </ErrorBoundary>
           <footer className="mx-auto max-w-7xl px-4 pb-10 text-xs text-stellar-haze sm:px-6 lg:px-10">
             Stellar Payment Gateway is an open-source scaffold — never commit funds; always verify

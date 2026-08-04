@@ -1,0 +1,44 @@
+# CODEOWNERS — Stellar Payment Gateway
+# Last updated: 2026-08-04
+#
+# Order is important; the last matching pattern takes precedence.
+
+# Global — fallback for everything not matched below
+* @stellar-payment-gateway/core
+
+# Smart contracts (Rust / Soroban)
+contracts/** @stellar-payment-gateway/contracts
+
+# API server (Fastify / TypeScript)
+apps/api/** @stellar-payment-gateway/backend
+
+# Web application (Next.js / React)
+apps/web/** @stellar-payment-gateway/frontend
+
+# Relayer service
+apps/relayer/** @stellar-payment-gateway/backend
+
+# SDK packages
+packages/sdk/** @stellar-payment-gateway/sdk
+packages/soroban-client/** @stellar-payment-gateway/sdk
+
+# Shared types & utilities
+packages/shared/** @stellar-payment-gateway/core
+
+# UI component library
+packages/ui/** @stellar-payment-gateway/frontend
+
+# Documentation
+docs/** @stellar-payment-gateway/core
+README.md @stellar-payment-gateway/core
+CHANGELOG.md @stellar-payment-gateway/core
+
+# CI/CD & Infrastructure
+.github/** @stellar-payment-gateway/devops
+docker/** @stellar-payment-gateway/devops
+docker-compose.yml @stellar-payment-gateway/devops
+Dockerfile.* @stellar-payment-gateway/devops
+
+# Security-sensitive files
+SECURITY.md @stellar-payment-gateway/core
+.env.example @stellar-payment-gateway/core

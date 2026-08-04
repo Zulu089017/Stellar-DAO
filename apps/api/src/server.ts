@@ -62,7 +62,28 @@ export const createServer = async (opts: ServerOptions = {}): Promise<FastifyIns
   });
 
   await app.register(sensible);
-  await app.register(helmet);
+  await app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: [
+          "'self'",
+          'https://horizon.stellar.org',
+          'https://horizon-testnet.stellar.org',
+        ],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+      },
+    },
+    crossOriginResourcePolicy: { policy: 'same-origin' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  });
   await app.register(cors, {
     origin: process.env.NODE_ENV === 'production' ? false : true,
   });
@@ -71,15 +92,15 @@ export const createServer = async (opts: ServerOptions = {}): Promise<FastifyIns
   const apiKeypair: Keypair | null = env.RELAYER_SECRET_KEY
     ? Keypair.fromSecret(env.RELAYER_SECRET_KEY)
     : null;
-app.decorate(
-  'sorobanSigner',
-  apiKeypair ??
-    ({
-      sign: () => {
-        throw new Error('API_RELAYER_SECRET_KEY not configured — see .env.example');
-      },
-    } as unknown as Keypair),
-);
+  app.decorate(
+    'sorobanSigner',
+    apiKeypair ??
+      ({
+        sign: () => {
+          throw new Error('API_RELAYER_SECRET_KEY not configured — see .env.example');
+        },
+      } as unknown as Keypair),
+  );
   app.decorate('networkPassphrase', env.STELLAR_NETWORK_PASSPHRASE);
   app.decorate('sorobanRpcUrl', env.SOROBAN_RPC_URL);
 
