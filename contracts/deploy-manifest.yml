@@ -80,3 +80,16 @@ contracts:
     wasm_hash: TBD
     initialize_params:
       admin: TBD
+
+  fee_manager:
+    contract_id: TBD
+    wasm_hash: TBD
+    initialize_params:
+      admin: TBD
+      default_fee_bps: 0
+
+  role_manager:
+    contract_id: TBD
+    wasm_hash: TBD
+    initialize_params:
+      super_admin: TBD

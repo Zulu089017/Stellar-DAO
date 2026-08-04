@@ -1,0 +1,17 @@
+[package]
+name = "role-manager"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Stellar Payment Gateway role manager contract — RBAC with grant/revoke, role checks, and cross-contract authorization"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true }

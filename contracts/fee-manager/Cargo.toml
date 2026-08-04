@@ -1,0 +1,17 @@
+[package]
+name = "fee-manager"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Stellar Payment Gateway fee manager contract — configurable fee tiers, merchant-specific overrides, and fee calculation"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true }

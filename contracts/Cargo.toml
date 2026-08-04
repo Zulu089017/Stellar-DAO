@@ -11,6 +11,8 @@ members = [
     "escrow",
     "invoice",
     "treasury",
+    "fee-manager",
+    "role-manager",
 ]
 
 [workspace.package]
