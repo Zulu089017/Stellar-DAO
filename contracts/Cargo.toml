@@ -9,6 +9,8 @@ members = [
     "timelock",
     "payment",
     "escrow",
+    "invoice",
+    "treasury",
 ]
 
 [workspace.package]

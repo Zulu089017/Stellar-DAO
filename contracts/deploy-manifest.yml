@@ -68,3 +68,15 @@ contracts:
     wasm_hash: TBD
     initialize_params:
       admin: TBD
+
+  invoice:
+    contract_id: TBD
+    wasm_hash: TBD
+    initialize_params:
+      admin: TBD
+
+  treasury:
+    contract_id: TBD
+    wasm_hash: TBD
+    initialize_params:
+      admin: TBD

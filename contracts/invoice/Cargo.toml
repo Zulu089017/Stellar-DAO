@@ -1,0 +1,17 @@
+[package]
+name = "invoice"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Stellar Payment Gateway invoice contract — on-chain invoice creation, payment tracking, partial payments, and cancellation"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true }
