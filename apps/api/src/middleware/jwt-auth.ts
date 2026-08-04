@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
+
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
 /**
@@ -56,9 +57,7 @@ function verifyJwt(token: string): JwtPayload | null {
 
     const [encodedHeader, encodedPayload, encodedSignature] = parts;
     const signingInput = `${encodedHeader}.${encodedPayload}`;
-    const expectedSig = base64url(
-      createHmac('sha256', JWT_SECRET).update(signingInput).digest(),
-    );
+    const expectedSig = base64url(createHmac('sha256', JWT_SECRET).update(signingInput).digest());
 
     const sigBuf = base64urlDecode(encodedSignature!);
     const expectedBuf = base64urlDecode(expectedSig);

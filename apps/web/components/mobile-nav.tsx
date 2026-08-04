@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/transactions', label: 'Transactions' },
   { href: '/governance', label: 'Governance' },
   { href: '/analytics', label: 'Analytics' },
+  { href: '/invoices', label: 'Invoices' },
 ];
 
 export function MobileNav() {
@@ -37,18 +38,14 @@ export function MobileNav() {
           <nav className="fixed inset-y-0 right-0 z-40 w-64 border-l border-white/10 bg-stellar-slate p-6 shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <span className="text-sm font-semibold text-white">Navigation</span>
-              <button
-                onClick={() => setOpen(false)}
-                className="text-stellar-haze hover:text-white"
-              >
+              <button onClick={() => setOpen(false)} className="text-stellar-haze hover:text-white">
                 ✕
               </button>
             </div>
             <div className="flex flex-col gap-1">
               {NAV_ITEMS.map((item) => {
                 const active =
-                  pathname === item.href ||
-                  (item.href !== '/' && pathname.startsWith(item.href));
+                  pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
                 return (
                   <Link
                     key={item.href}

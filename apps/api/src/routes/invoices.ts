@@ -1,5 +1,6 @@
-import type { FastifyInstance } from 'fastify';
 import { randomUUID } from 'node:crypto';
+
+import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type {
   CreateInvoiceRequest,
@@ -63,14 +64,11 @@ export const invoiceRoutes = async (app: FastifyInstance): Promise<void> => {
   });
 
   /** Get an invoice by id. */
-  app.get<{ Params: { id: string } }>(
-    '/:id',
-    async (req, reply): Promise<GetInvoiceResponse> => {
-      const invoice = await invoiceRepository.findById(req.params.id);
-      if (!invoice) return reply.notFound('invoice not found');
-      return { invoice };
-    },
-  );
+  app.get<{ Params: { id: string } }>('/:id', async (req, reply): Promise<GetInvoiceResponse> => {
+    const invoice = await invoiceRepository.findById(req.params.id);
+    if (!invoice) return reply.notFound('invoice not found');
+    return { invoice };
+  });
 
   /** Pay an invoice (full or partial). Only the designated payer can call this. */
   app.patch<{ Params: { id: string }; Body: PayInvoiceRequest }>(
@@ -87,7 +85,8 @@ export const invoiceRoutes = async (app: FastifyInstance): Promise<void> => {
 
       const invoice = await invoiceRepository.findById(req.params.id);
       if (!invoice) return reply.notFound('invoice not found');
-      if (invoice.payer !== payer) return reply.forbidden('only the designated payer can pay this invoice');
+      if (invoice.payer !== payer)
+        return reply.forbidden('only the designated payer can pay this invoice');
       if (invoice.status === 'paid') return reply.badRequest('invoice already paid');
       if (invoice.status === 'cancelled') return reply.badRequest('invoice is cancelled');
       if (invoice.status === 'expired') return reply.badRequest('invoice has expired');
@@ -116,7 +115,8 @@ export const invoiceRoutes = async (app: FastifyInstance): Promise<void> => {
 
       const invoice = await invoiceRepository.findById(req.params.id);
       if (!invoice) return reply.notFound('invoice not found');
-      if (invoice.creator !== creator) return reply.forbidden('only the creator can cancel this invoice');
+      if (invoice.creator !== creator)
+        return reply.forbidden('only the creator can cancel this invoice');
       if (invoice.status === 'paid') return reply.badRequest('cannot cancel a paid invoice');
       if (invoice.status === 'cancelled') return reply.badRequest('invoice already cancelled');
 

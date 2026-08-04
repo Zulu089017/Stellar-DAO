@@ -98,11 +98,9 @@ test.describe('Theme Switching', () => {
     test('theme toggle is accessible on mobile', async ({ nav, page }) => {
       await nav.navigateTo('/');
 
-      const header = page.locator('header');
-      const toggleInHeader = header.locator('button[aria-label*="theme" i], button[aria-label*="toggle" i]');
-
-      if (await toggleInHeader.isVisible()) {
-        await toggleInHeader.click();
+      const toggle = nav.themeToggle;
+      if (await toggle.isVisible()) {
+        await toggle.click();
         await page.waitForTimeout(300);
       }
     });

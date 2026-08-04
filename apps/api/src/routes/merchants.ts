@@ -1,5 +1,6 @@
-import type { FastifyInstance } from 'fastify';
 import { randomBytes, randomUUID, createHmac } from 'node:crypto';
+
+import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import type {
   GetMerchantResponse,
@@ -95,15 +96,12 @@ export const merchantRoutes = async (app: FastifyInstance): Promise<void> => {
   );
 
   /** Get a merchant by id. */
-  app.get<{ Params: { id: string } }>(
-    '/:id',
-    async (req, reply): Promise<GetMerchantResponse> => {
-      const merchant = await merchantStore.findById(req.params.id);
-      if (!merchant) return reply.notFound('merchant not found');
-      const { apiKeyHash, ...safe } = merchant;
-      return { merchant: safe };
-    },
-  );
+  app.get<{ Params: { id: string } }>('/:id', async (req, reply): Promise<GetMerchantResponse> => {
+    const merchant = await merchantStore.findById(req.params.id);
+    if (!merchant) return reply.notFound('merchant not found');
+    const { apiKeyHash: _, ...safe } = merchant;
+    return { merchant: safe };
+  });
 
   /** Update merchant profile. Authenticated merchant or admin only. */
   app.patch<{ Params: { id: string } }>(
@@ -127,7 +125,7 @@ export const merchantRoutes = async (app: FastifyInstance): Promise<void> => {
       Object.assign(merchant, parsed.data, { updatedAt: new Date().toISOString() });
       await merchantStore.upsert(merchant);
 
-      const { apiKeyHash, ...safe } = merchant;
+      const { apiKeyHash: _, ...safe } = merchant;
       return { merchant: safe };
     },
   );

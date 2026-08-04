@@ -54,8 +54,8 @@ export class NavigationComponent {
   }
 
   get themeToggle() {
-    // Match the actual aria-label: "Switch to dark mode" or "Switch to light mode"
-    return this.page.locator('button[aria-label*="mode" i]');
+    // Match the 3-mode cycle aria-label: "Theme: dark (dark)", "Theme: light (light)", etc.
+    return this.page.locator('button[aria-label*="Theme" i]');
   }
 
   get mobileMenuButton() {
@@ -63,7 +63,9 @@ export class NavigationComponent {
   }
 
   get mobileNavPanel() {
-    return this.page.locator('nav:has(a[href="/wrap"])').filter({ has: this.page.locator('text=Navigation') });
+    return this.page
+      .locator('nav:has(a[href="/wrap"])')
+      .filter({ has: this.page.locator('text=Navigation') });
   }
 
   get mobileNavBackdrop() {
@@ -84,12 +86,9 @@ export class NavigationComponent {
   }
 
   async isDarkMode(): Promise<boolean> {
-    // The app's globals.css applies the `.light` class for light mode.
-    // Dark mode is the default (no class). Check for the absence of
-    // the `light` class on the root <html> element.
-    return this.page.evaluate(() =>
-      !document.documentElement.classList.contains('light'),
-    );
+    // The app toggles the `.dark` class on <html> via useTheme hook.
+    // Dark mode = .dark class present; light = .dark class absent.
+    return this.page.evaluate(() => document.documentElement.classList.contains('dark'));
   }
 
   async openMobileMenu() {
@@ -229,7 +228,9 @@ export class GovernancePage {
   }
 
   get proposalFilterButtons() {
-    return this.page.locator('button').filter({ hasText: /all|active|succeeded|executed|defeated|canceled/i });
+    return this.page
+      .locator('button')
+      .filter({ hasText: /all|active|succeeded|executed|defeated|canceled/i });
   }
 
   get votePanelHeading() {
@@ -289,21 +290,27 @@ type Fixtures = {
 
 export const test = base.extend<Fixtures>({
   dashboard: async ({ page }, use) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture
     await use(new DashboardPage(page));
   },
   nav: async ({ page }, use) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture
     await use(new NavigationComponent(page));
   },
   wrap: async ({ page }, use) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture
     await use(new WrapPage(page));
   },
   transactions: async ({ page }, use) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture
     await use(new TransactionsPage(page));
   },
   governance: async ({ page }, use) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture
     await use(new GovernancePage(page));
   },
   analytics: async ({ page }, use) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- Playwright fixture
     await use(new AnalyticsPage(page));
   },
 });
