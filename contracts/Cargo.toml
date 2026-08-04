@@ -28,7 +28,7 @@ repository = "https://github.com/stellar-payment-gateway/stellar-payment-gateway
 # NOT enabled on contract dev-deps — see
 # docs/soroban-testutils-issue.md for the E0277 rationale and the
 # test-removal reasoning.
-soroban-sdk = { version = "=21.7.7", features = ["alloc"] }
+soroban-sdk = { version = "=27.0.4", features = ["alloc"] }
 
 [profile.release]
 opt-level = "z"
