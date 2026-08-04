@@ -2,9 +2,9 @@
 
 ## General
 
-### What is StellarDAO?
+### What is Stellar Payment Gateway?
 
-StellarDAO is a cross-chain wrapping middleware for the Stellar ecosystem. It lets developers create wrapped versions of their Ethereum (ERC-20), Solana (SPL), and Polygon tokens on Stellar, leveraging Stellar's ultra-low fees and fast settlement.
+Stellar Payment Gateway is a cross-chain wrapping middleware for the Stellar ecosystem. It lets developers create wrapped versions of their Ethereum (ERC-20), Solana (SPL), and Polygon tokens on Stellar, leveraging Stellar's ultra-low fees and fast settlement.
 
 ### How does the wrapping work?
 
@@ -13,9 +13,9 @@ StellarDAO is a cross-chain wrapping middleware for the Stellar ecosystem. It le
 3. The attestation is posted to the Soroban bridge contract
 4. The bridge verifies the signatures and mints a wrapper token on Stellar
 
-### Is StellarDAO production-ready?
+### Is Stellar Payment Gateway production-ready?
 
-StellarDAO is a scaffold designed for testnet use and hackathons. While the core architecture is sound, several components need hardening before mainnet deployment (see [Security Considerations](docs/SECURITY.md)).
+Stellar Payment Gateway is a scaffold designed for testnet use and hackathons. While the core architecture is sound, several components need hardening before mainnet deployment (see [Security Considerations](docs/SECURITY.md)).
 
 **Do not commit real funds** until a full security audit has been completed.
 
@@ -133,7 +133,7 @@ The codebase has undergone internal review but has not been audited by an extern
 
 ### How do I report a vulnerability?
 
-Email **security@stellardao.dev**. Please allow 48 hours for acknowledgment and 7 days for remediation before public disclosure.
+Email **security@stellar-payment-gateway.dev**. Please allow 48 hours for acknowledgment and 7 days for remediation before public disclosure.
 
 ### What is the emergency recovery process?
 

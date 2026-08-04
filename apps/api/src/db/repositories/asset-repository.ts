@@ -1,6 +1,6 @@
 import { and, asc, eq, gt, sql } from 'drizzle-orm';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import type { AssetId, AssetRegistryEntry, SourceChainId } from '@stellardao/shared';
+import type { AssetId, AssetRegistryEntry, SourceChainId } from '@stellar-payment-gateway/shared';
 
 import { bootstrapSchema, getDb, __closeDbForTest } from '../pool.js';
 import * as schema from '../schema.js';

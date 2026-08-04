@@ -25,7 +25,7 @@ export const TopNav = () => {
       <div className="mx-auto flex w-full min-w-0 max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-10">
         <Link href="/" className="focus-ring flex min-w-0 items-center gap-3 overflow-hidden text-white">
           <LogoMark />
-          <span className="font-display text-base font-semibold tracking-tight">StellarDAO</span>
+          <span className="font-display text-base font-semibold tracking-tight">Stellar Payment Gateway</span>
           <span className="hidden rounded-full border border-stellar-aurora/30 bg-stellar-aurora/10 px-2 py-0.5 text-[10px] uppercase tracking-widest text-stellar-aurora sm:inline">
             testnet
           </span>

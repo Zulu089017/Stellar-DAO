@@ -1,6 +1,6 @@
 ---
 name: Pull Request
-about: Submit a change to the StellarDAO codebase
+about: Submit a change to the Stellar Payment Gateway codebase
 title: ''
 labels: ''
 assignees: ''

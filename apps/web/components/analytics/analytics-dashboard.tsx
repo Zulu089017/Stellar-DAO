@@ -30,7 +30,7 @@ export function AnalyticsDashboard() {
       <div>
         <h2 className="text-xl font-semibold text-white">Protocol Analytics</h2>
         <p className="text-sm text-stellar-haze">
-          Real-time metrics for the StellarDAO bridge protocol.
+          Real-time metrics for the Stellar Payment Gateway bridge protocol.
         </p>
       </div>
 

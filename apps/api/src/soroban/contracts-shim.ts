@@ -1,6 +1,6 @@
 import type { Keypair } from '@stellar/stellar-sdk';
-import type { SignedAttestation, LockPayload, UnlockPayload } from '@stellardao/shared';
-import { BridgeContract, FactoryContract, WrapperTokenContract } from '@stellardao/sdk';
+import type { SignedAttestation, LockPayload, UnlockPayload } from '@stellar-payment-gateway/shared';
+import { BridgeContract, FactoryContract, WrapperTokenContract } from '@stellar-payment-gateway/sdk';
 
 /**
  * Thin orchestration layer so route handlers (`apps/api/src/routes/*`) can

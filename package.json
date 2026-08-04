@@ -1,8 +1,8 @@
 {
-  "name": "stellardao",
+  "name": "stellar-payment-gateway",
   "version": "0.1.0",
   "private": true,
-  "description": "StellarDAO — a cross-chain wrapping middleware that lets developers on Ethereum, Solana and Polygon spin up wrapped versions of their tokens on Stellar, with Horizon-powered real-time updates.",
+  "description": "Stellar Payment Gateway — a cross-chain wrapping middleware that lets developers on Ethereum, Solana and Polygon spin up wrapped versions of their tokens on Stellar, with Horizon-powered real-time updates.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -18,13 +18,13 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml,rust,toml}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml,rust,toml}\"",
     "clean": "turbo run clean && rm -rf node_modules .turbo",
-    "contracts:build": "pnpm --filter @stellardao/contracts build",
-    "contracts:test": "pnpm --filter @stellardao/contracts test",
+    "contracts:build": "pnpm --filter @stellar-payment-gateway/contracts build",
+    "contracts:test": "pnpm --filter @stellar-payment-gateway/contracts test",
     "contracts:deploy": "pnpm tsx scripts/deploy.ts",
     "bindings:generate": "pnpm tsx scripts/generate-bindings.ts",
     "changelog": "bash scripts/generate-changelog.sh",
     "changelog:check": "bash scripts/generate-changelog.sh --check",
-    "cli": "pnpm --filter @stellardao/cli cli",
+    "cli": "pnpm --filter @stellar-payment-gateway/cli cli",
     "prepare": "husky"
   },
   "devDependencies": {

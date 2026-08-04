@@ -7,7 +7,7 @@ import {
   vi,
 } from 'vitest';
 import { Keypair } from '@stellar/stellar-sdk';
-import { __resetEnvCache, type Transaction } from '@stellardao/shared';
+import { __resetEnvCache, type Transaction } from '@stellar-payment-gateway/shared';
 
 import { createServer } from '../server.js';
 import {

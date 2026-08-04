@@ -1,4 +1,4 @@
-import { chainLabel, type SourceChainId } from '@stellardao/shared';
+import { chainLabel, type SourceChainId } from '@stellar-payment-gateway/shared';
 
 const colorByChain: Record<SourceChainId | 'stellar', string> = {
   ethereum: 'from-indigo-400 to-blue-500 text-white',

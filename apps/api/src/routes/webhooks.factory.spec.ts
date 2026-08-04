@@ -28,8 +28,8 @@ import crypto from 'node:crypto';
 
 import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest';
 import { Keypair, StrKey } from '@stellar/stellar-sdk';
-import { FactoryContract } from '@stellardao/sdk';
-import { __resetEnvCache } from '@stellardao/shared';
+import { FactoryContract } from '@stellar-payment-gateway/sdk';
+import { __resetEnvCache } from '@stellar-payment-gateway/shared';
 
 import { createServer } from '../server.js';
 import { __resetAssetRepoForTest } from '../db/repositories/asset-repository.js';
@@ -331,7 +331,7 @@ describe('POST /webhooks/factory/confirm', () => {
 
 /* ─────────────────── POST /webhooks/factory/confirm: HMAC verification ─────────────────── *
  * When `RELAYER_HMAC_SECRET` is configured, the route enforces
- * `X-Stellar-DAO-Signature = hex(hmac_sha256(secret, JSON.stringify(body)))`
+ * `X-Stellar-Payment-Gateway-Signature = hex(hmac_sha256(secret, JSON.stringify(body)))`
  * in constant time. When the secret is empty (test suite default,
  * ephemeral CI, local dev), enforcement is bypassed — that's the
  * path the rest of this file exercises. The block below pins the
@@ -397,13 +397,13 @@ describe('POST /webhooks/factory/confirm (HMAC verification)', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/webhooks/factory/confirm',
-      headers: { 'x-stellar-dao-signature': sig },
+      headers: { 'x-stellar-payment-gateway-signature': sig },
       payload: body,
     });
     expect(res.statusCode).toBe(202);
   });
 
-  it('returns 401 when X-Stellar-DAO-Signature header is absent', async () => {
+  it('returns 401 when X-Stellar-Payment-Gateway-Signature header is absent', async () => {
     const res = await app.inject({
       method: 'POST',
       url: '/webhooks/factory/confirm',
@@ -425,7 +425,7 @@ describe('POST /webhooks/factory/confirm (HMAC verification)', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/webhooks/factory/confirm',
-      headers: { 'x-stellar-dao-signature': tampered },
+      headers: { 'x-stellar-payment-gateway-signature': tampered },
       payload: body,
     });
     expect(res.statusCode).toBe(401);
@@ -438,7 +438,7 @@ describe('POST /webhooks/factory/confirm (HMAC verification)', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/webhooks/factory/confirm',
-      headers: { 'x-stellar-dao-signature': sig },
+      headers: { 'x-stellar-payment-gateway-signature': sig },
       payload: mutated,
     });
     expect(res.statusCode).toBe(401);
@@ -448,7 +448,7 @@ describe('POST /webhooks/factory/confirm (HMAC verification)', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/webhooks/factory/confirm',
-      headers: { 'x-stellar-dao-signature': 'not-hex-at-all!!' },
+      headers: { 'x-stellar-payment-gateway-signature': 'not-hex-at-all!!' },
       payload: validBody(),
     });
     expect(res.statusCode).toBe(401);
@@ -458,7 +458,7 @@ describe('POST /webhooks/factory/confirm (HMAC verification)', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/webhooks/factory/confirm',
-      headers: { 'x-stellar-dao-signature': 'aabbccdd' }, // 4 hex chars, expected = 64
+      headers: { 'x-stellar-payment-gateway-signature': 'aabbccdd' }, // 4 hex chars, expected = 64
       payload: validBody(),
     });
     expect(res.statusCode).toBe(401);

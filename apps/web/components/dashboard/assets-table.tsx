@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { chainLabel, type AssetRegistryEntry } from '@stellardao/shared';
+import { chainLabel, type AssetRegistryEntry } from '@stellar-payment-gateway/shared';
 
 import { ChainBadge } from '@/components/atoms/chain-badge';
 import { AddressDisplay } from '@/components/atoms/address-display';

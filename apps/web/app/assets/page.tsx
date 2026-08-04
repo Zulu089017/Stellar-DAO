@@ -4,8 +4,8 @@ import { AssetsLiveTable } from '@/components/dashboard/assets-live-table';
 import { serverApi } from '@/lib/server-api';
 
 export const metadata: Metadata = {
-  title: 'Assets · StellarDAO',
-  description: 'Wrapped assets deployed via the StellarDAO factory.',
+  title: 'Assets · Stellar Payment Gateway',
+  description: 'Wrapped assets deployed via the Stellar Payment Gateway factory.',
 };
 
 export default async function AssetsPage() {

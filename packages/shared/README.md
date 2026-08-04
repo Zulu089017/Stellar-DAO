@@ -1,4 +1,4 @@
-# `@stellardao/shared`
+# `@stellar-payment-gateway/shared`
 
 Cross-package primitives: source-chain types, transaction lifecycle, payload
 schemas, environment validation, and any string constant that's referenced
@@ -17,7 +17,7 @@ from more than one package.
 ## Quick example
 
 ```ts
-import { SOURCE_CHAINS, assetIdFor, parseEnv } from '@stellardao/shared';
+import { SOURCE_CHAINS, assetIdFor, parseEnv } from '@stellar-payment-gateway/shared';
 
 const env = parseEnv.api();
 console.log('connecting to', env.HORIZON_URL);

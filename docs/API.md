@@ -1,4 +1,4 @@
-# StellarDAO API Reference
+# Stellar Payment Gateway API Reference
 
 Base URL: `http://localhost:4000`
 
@@ -133,7 +133,7 @@ Deep health check including relayer and contract connectivity status.
 POST /webhooks/factory/confirm
 ```
 Confirm a factory deployment. Requires HMAC signature via
-`X-Stellar-DAO-Signature` header when `RELAYER_HMAC_SECRET` is configured.
+`X-Stellar-Payment-Gateway-Signature` header when `RELAYER_HMAC_SECRET` is configured.
 
 ### SSE (Server-Sent Events)
 

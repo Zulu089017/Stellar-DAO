@@ -9,9 +9,9 @@ interface FaqItem {
 
 const faqItems: FaqItem[] = [
   {
-    question: 'What is StellarDAO?',
+    question: 'What is Stellar Payment Gateway?',
     answer:
-      'StellarDAO is a cross-chain wrapping middleware that lets developers spin up wrapped versions of their Ethereum (ERC-20), Solana (SPL), or Polygon tokens on Stellar. It uses Soroban smart contracts, a multi-sig relayer network, and real-time Horizon event streaming to deliver settlements in under 5 seconds.',
+      'Stellar Payment Gateway is a cross-chain wrapping middleware that lets developers spin up wrapped versions of their Ethereum (ERC-20), Solana (SPL), or Polygon tokens on Stellar. It uses Soroban smart contracts, a multi-sig relayer network, and real-time Horizon event streaming to deliver settlements in under 5 seconds.',
   },
   {
     question: 'How does the bridge secure my tokens?',
@@ -26,17 +26,17 @@ const faqItems: FaqItem[] = [
   {
     question: 'Which wallets are supported?',
     answer:
-      'StellarDAO supports Freighter and Albedo browser extension wallets. A deterministic mock wallet is available for development. WalletConnect and hardware wallet support are on the roadmap.',
+      'Stellar Payment Gateway supports Freighter and Albedo browser extension wallets. A deterministic mock wallet is available for development. WalletConnect and hardware wallet support are on the roadmap.',
   },
   {
-    question: 'Is StellarDAO audited?',
+    question: 'Is Stellar Payment Gateway audited?',
     answer:
       'An external security audit is planned for the v1.0 mainnet release. The current testnet deployment includes internal security review covering signature verification, nonce replay protection, front-running resistance, and admin key management. See docs/SECURITY.md for the full threat model.',
   },
   {
     question: 'How does governance work?',
     answer:
-      'StellarDAO uses on-chain governance with a SEP-41 governance token featuring delegation and checkpointing. Proposals are created, voted on, and executed through a timelock controller that enforces a configurable delay (minimum 24h on mainnet) for all administrative actions.',
+      'Stellar Payment Gateway uses on-chain governance with a SEP-41 governance token featuring delegation and checkpointing. Proposals are created, voted on, and executed through a timelock controller that enforces a configurable delay (minimum 24h on mainnet) for all administrative actions.',
   },
   {
     question: 'Can I run my own relayer?',
@@ -98,7 +98,7 @@ export function FaqSection({ className = '' }: Props) {
       <div className="mb-8 text-center">
         <h2 className="text-2xl font-semibold text-white sm:text-3xl">Frequently asked questions</h2>
         <p className="mt-3 text-sm text-stellar-haze">
-          Everything you need to know about cross-chain wrapping on StellarDAO.
+          Everything you need to know about cross-chain wrapping on Stellar Payment Gateway.
         </p>
       </div>
       <div className="mx-auto max-w-2xl rounded-2xl border border-white/5 bg-white/[0.02] px-6">

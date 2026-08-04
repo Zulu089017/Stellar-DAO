@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { StatusDot } from '@stellardao/ui';
-import type { Transaction } from '@stellardao/shared';
+import { StatusDot } from '@stellar-payment-gateway/ui';
+import type { Transaction } from '@stellar-payment-gateway/shared';
 
 import { ChainBadge } from '@/components/atoms/chain-badge';
 import { AddressDisplay } from '@/components/atoms/address-display';

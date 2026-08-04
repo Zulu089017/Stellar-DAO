@@ -1,4 +1,4 @@
-# `@stellardao/api`
+# `@stellar-payment-gateway/api`
 
 The middle layer between the source-chain relayer, the Soroban
 contracts, and the dashboard. Fastify because of the rich plugin

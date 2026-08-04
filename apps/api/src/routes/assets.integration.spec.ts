@@ -7,9 +7,9 @@ import {
   vi,
   type MockInstance,
 } from 'vitest';
-import { FactoryContract } from '@stellardao/sdk';
+import { FactoryContract } from '@stellar-payment-gateway/sdk';
 import { Keypair } from '@stellar/stellar-sdk';
-import { __resetEnvCache, type AssetRegistryEntry } from '@stellardao/shared';
+import { __resetEnvCache, type AssetRegistryEntry } from '@stellar-payment-gateway/shared';
 
 import { createServer } from '../server.js';
 import {

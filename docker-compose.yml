@@ -1,4 +1,4 @@
-# ── StellarDAO Docker Compose ──────────────────────────────────
+# ── Stellar Payment Gateway Docker Compose ──────────────────────────────────
 # Spins up the full local development stack:
 #   • PostgreSQL 16 — Drizzle ORM backend
 #   • API         — Fastify REST + SSE on :4000
@@ -22,19 +22,19 @@ services:
   # ── PostgreSQL ───────────────────────────────────────────────
   postgres:
     image: postgres:16-alpine
-    container_name: stellardao-postgres
+    container_name: stellar-payment-gateway-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: stellardao
-      POSTGRES_PASSWORD: stellardao
-      POSTGRES_DB: stellardao
+      POSTGRES_USER: stellar-payment-gateway
+      POSTGRES_PASSWORD: stellar-payment-gateway
+      POSTGRES_DB: stellar-payment-gateway
     ports:
       - '5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./apps/api/drizzle:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U stellardao']
+      test: ['CMD-SHELL', 'pg_isready -U stellar-payment-gateway']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -44,7 +44,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.api
-    container_name: stellardao-api
+    container_name: stellar-payment-gateway-api
     restart: unless-stopped
     ports:
       - '4000:4000'
@@ -58,7 +58,7 @@ services:
       SOLANA_RPC_URL: https://api.mainnet-beta.solana.com
       POLYGON_RPC_URL: https://polygon-rpc.com
       API_PORT: '4000'
-      DATABASE_URL: postgres://stellardao:stellardao@postgres:5432/stellardao
+      DATABASE_URL: postgres://stellar-payment-gateway:stellar-payment-gateway@postgres:5432/stellar-payment-gateway
       API_KEYS: dev-key-1,dev-key-2
       RELAYER_HMAC_SECRET: dev-hmac-secret
     depends_on:
@@ -74,7 +74,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.web
-    container_name: stellardao-web
+    container_name: stellar-payment-gateway-web
     restart: unless-stopped
     ports:
       - '3000:3000'
@@ -96,7 +96,7 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile.relayer
-    container_name: stellardao-relayer
+    container_name: stellar-payment-gateway-relayer
     restart: unless-stopped
     environment:
       NODE_ENV: development
@@ -120,7 +120,7 @@ services:
   # ── Prometheus (monitoring profile) ─────────────────────────
   prometheus:
     image: prom/prometheus:v2.53.0
-    container_name: stellardao-prometheus
+    container_name: stellar-payment-gateway-prometheus
     restart: unless-stopped
     profiles: ['monitoring', 'production']
     ports:
@@ -138,16 +138,16 @@ services:
   # ── Grafana (monitoring profile) ────────────────────────────
   grafana:
     image: grafana/grafana:11.1.0
-    container_name: stellardao-grafana
+    container_name: stellar-payment-gateway-grafana
     restart: unless-stopped
     profiles: ['monitoring', 'production']
     ports:
       - '3030:3000'
     environment:
       GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: stellardao
+      GF_SECURITY_ADMIN_PASSWORD: stellar-payment-gateway
       GF_USERS_ALLOW_SIGN_UP: 'false'
-      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/stellardao.json
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/stellar-payment-gateway.json
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana-dashboards:/etc/grafana/dashboards:ro

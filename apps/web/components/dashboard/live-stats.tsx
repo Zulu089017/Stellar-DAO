@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { HealthResponse } from '@stellardao/shared';
+import type { HealthResponse } from '@stellar-payment-gateway/shared';
 
 export const LiveStats = ({ initial }: { initial: HealthResponse | null }) => {
   const [data, setData] = useState<HealthResponse | null>(initial);

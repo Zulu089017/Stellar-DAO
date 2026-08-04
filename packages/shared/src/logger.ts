@@ -1,12 +1,12 @@
 /**
- * Shared structured logger for the StellarDAO monorepo.
+ * Shared structured logger for the Stellar Payment Gateway monorepo.
  *
  * Wraps Pino with project-wide defaults (redacted secrets, request-id
  * propagation, level-aware formatting). Use `createLogger(name)` in
  * every service so log lines can be traced back to their origin.
  *
  * Usage:
- *   import { createLogger } from '@stellardao/shared/logger';
+ *   import { createLogger } from '@stellar-payment-gateway/shared/logger';
  *   const log = createLogger('api');
  *   log.info({ txId }, 'Transaction created');
  */

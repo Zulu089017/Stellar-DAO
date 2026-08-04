@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { Keypair } from '@stellar/stellar-sdk';
 import { ed25519 } from '@noble/curves/ed25519';
-import { buildLockDigest, signEd25519, verifyEd25519 } from '@stellardao/sdk';
+import { buildLockDigest, signEd25519, verifyEd25519 } from '@stellar-payment-gateway/sdk';
 
 import { eventQueue } from './state/event-queue.js';
 

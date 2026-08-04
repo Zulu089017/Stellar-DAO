@@ -1,11 +1,11 @@
 /**
- * Governance contract bindings for the StellarDAO SDK.
+ * Governance contract bindings for the Stellar Payment Gateway SDK.
  *
  * Provides typed interfaces for interacting with the governance token,
  * governance proposal contract, and timelock controller from off-chain.
  */
 
-import type { GovernanceProposal, VoteType } from '@stellardao/shared';
+import type { GovernanceProposal, VoteType } from '@stellar-payment-gateway/shared';
 
 export interface GovernanceTokenBindings {
   /** Total supply of governance tokens. */

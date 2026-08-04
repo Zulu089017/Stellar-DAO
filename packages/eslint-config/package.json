@@ -1,8 +1,8 @@
 {
-  "name": "@stellardao/eslint-config",
+  "name": "@stellar-payment-gateway/eslint-config",
   "version": "0.1.0",
   "private": true,
-  "description": "Shareable ESLint preset tuned for StellarDAO polyrepo.",
+  "description": "Shareable ESLint preset tuned for Stellar Payment Gateway polyrepo.",
   "main": "index.js",
   "type": "module",
   "files": ["index.js", "react.js", "node.js"],

@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import type { HealthResponse } from '@stellardao/shared';
-import { parseEnv } from '@stellardao/shared';
-import { HorizonClient } from '@stellardao/sdk';
+import type { HealthResponse } from '@stellar-payment-gateway/shared';
+import { parseEnv } from '@stellar-payment-gateway/shared';
+import { HorizonClient } from '@stellar-payment-gateway/sdk';
 
 export const healthRoutes = async (app: FastifyInstance): Promise<void> => {
   app.get('/', async () => {

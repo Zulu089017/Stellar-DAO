@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Keypair } from '@stellar/stellar-sdk';
-import { BridgeContract } from '@stellardao/sdk';
-import type { SourceChainId } from '@stellardao/shared';
+import { BridgeContract } from '@stellar-payment-gateway/sdk';
+import type { SourceChainId } from '@stellar-payment-gateway/shared';
 
 import { eventQueue } from '../state/event-queue.js';
 import type { LockEvent } from '../sources/types.js';

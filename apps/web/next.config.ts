@@ -2,7 +2,7 @@ import type { NextConfig } from 'next';
 
 const config: NextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@stellardao/shared', '@stellardao/sdk', '@stellardao/ui', '@stellardao/soroban-client'],
+  transpilePackages: ['@stellar-payment-gateway/shared', '@stellar-payment-gateway/sdk', '@stellar-payment-gateway/ui', '@stellar-payment-gateway/soroban-client'],
   // ESM-style TypeScript monorepo: source files use `.js` extensions in
   // their imports (matching what will be the compiled output), but
   // webpack by default doesn't try `.ts`/`.tsx` when resolving `.js`

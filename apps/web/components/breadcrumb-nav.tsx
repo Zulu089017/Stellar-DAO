@@ -2,7 +2,7 @@
  * Breadcrumb navigation component.
  *
  * Renders a hierarchical breadcrumb trail with links for deep pages.
- * Supports the StellarDAO dashboard's nested route structure:
+ * Supports the Stellar Payment Gateway dashboard's nested route structure:
  *   Home > Governance > Proposal #3
  *   Home > Assets > Ethereum > 0xABCD
  *
@@ -53,7 +53,7 @@ export function BreadcrumbNav({ segments }: BreadcrumbNavProps) {
 }
 
 /**
- * Pre-built breadcrumb paths for common StellarDAO routes.
+ * Pre-built breadcrumb paths for common Stellar Payment Gateway routes.
  */
 export const breadcrumbs = {
   governance: (id?: string): BreadcrumbSegment[] => [

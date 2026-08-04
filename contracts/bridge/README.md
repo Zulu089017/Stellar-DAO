@@ -21,13 +21,13 @@ All signed messages start with a 16-byte ASCII tag so signatures cannot be
 cross-used between the two directions:
 
 ```
-STELLARDAO_LOCK_V1   || source_chain_symbol
+STELLAR_PAYMENT_GATEWAY_LOCK_V1   || source_chain_symbol
                      || source_token_bytes
                      || wrapper_token_addr (32 bytes)
                      || recipient_addr
                      || amount_be128
                      || nonce_32bytes
-STELLARDAO_UNLOCK_V1 || source_chain_symbol
+STELLAR_PAYMENT_GATEWAY_UNLOCK_V1 || source_chain_symbol
                      || wrapper_token_addr (32 bytes)
                      || source_address_bytes
                      || amount_be128

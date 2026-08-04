@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import type { Transaction, ListTransactionsResponse, GetTransactionResponse } from '@stellardao/shared';
+import type { Transaction, ListTransactionsResponse, GetTransactionResponse } from '@stellar-payment-gateway/shared';
 
 import { transactionRepository } from '../db/repositories/transaction-repository.js';
 

@@ -1,6 +1,6 @@
 # Backend Quality Criteria
 
-This document defines the quality gates for the StellarDAO backend services
+This document defines the quality gates for the Stellar Payment Gateway backend services
 (`apps/api`, `apps/relayer`). These criteria align with production readiness
 standards and grant platform expectations.
 
@@ -17,7 +17,7 @@ standards and grant platform expectations.
 - [ ] Zero TypeScript errors under `strict: true`
 - [ ] All API inputs validated with Zod schemas before processing
 - [ ] All API responses typed (no `unknown` or `any` in response bodies)
-- [ ] Environment variables parsed and validated via `@stellardao/shared/env`
+- [ ] Environment variables parsed and validated via `@stellar-payment-gateway/shared/env`
 
 ### 2. API Design
 - [ ] RESTful endpoint naming: `GET /resource`, `POST /resource`, `GET /resource/:id`

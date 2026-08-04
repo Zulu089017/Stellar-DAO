@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
-import { isSourceChain } from '@stellardao/shared';
+import { isSourceChain } from '@stellar-payment-gateway/shared';
 
 import { ChainFilterChips } from '@/components/dashboard/chain-filter-chips';
 import { TransactionsPanel } from '@/components/dashboard/transactions-panel';
 import { serverApi } from '@/lib/server-api';
 
 export const metadata: Metadata = {
-  title: 'Transactions · StellarDAO',
+  title: 'Transactions · Stellar Payment Gateway',
   description: 'Live wrap and unwrap transactions, streamed straight from Horizon.',
 };
 

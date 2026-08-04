@@ -5,7 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "StellarDAO wrapper-token — capped-mint/burn ERC-20-style token that the bridge contract is authorised for."
+description = "Stellar Payment Gateway wrapper-token — capped-mint/burn ERC-20-style token that the bridge contract is authorised for."
 
 [lib]
 crate-type = ["cdylib"]

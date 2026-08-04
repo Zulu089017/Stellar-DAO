@@ -36,7 +36,7 @@ test.describe('Navigation & Global UI', () => {
       }
 
       // LogoMark renders <span> elements, not <svg>/<img>.
-      // Match the link containing "StellarDAO" text in the header.
+      // Match the link containing "Stellar Payment Gateway" text in the header.
       const logo = page.locator('header a[href="/"]').first();
       await logo.click();
       await expect(page).toHaveURL('/');
@@ -81,7 +81,7 @@ test.describe('Navigation & Global UI', () => {
       await page.goto('/');
       const header = page.locator('header');
       await expect(header).toBeVisible();
-      await expect(header.getByText('StellarDAO')).toBeVisible();
+      await expect(header.getByText('Stellar Payment Gateway')).toBeVisible();
       await expect(header.getByText(/testnet/i)).toBeVisible();
     });
   });

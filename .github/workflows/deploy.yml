@@ -1,4 +1,4 @@
-# ── StellarDAO deployment workflow ────────────────────────────
+# ── Stellar Payment Gateway deployment workflow ────────────────────────────
 # Manual trigger: deploys contracts and services to Stellar testnet.
 # Requires GitHub secrets: STELLAR_SECRET_KEY, SSH_HOST, SSH_KEY
 

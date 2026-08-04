@@ -6,7 +6,7 @@ import type { LockEvent, SourceAdapter } from './types.js';
  * Solana adapter.
  *
  * Returns a `SourceAdapter` whose `watch` method opens a `programAccount`
- * subscription against the StellarDAO Vault program on Solana. The real
+ * subscription against the Stellar Payment Gateway Vault program on Solana. The real
  * implementation should use `program.addEventListener('Locked', ...)` from
  * Anchor; the scaffold uses the lowest-level RPC subscription so it runs
  * without an IDL fixture.
@@ -15,7 +15,7 @@ export const solanaWatcher = async (rpcUrl: string): Promise<SourceAdapter> => (
   async watch(overrideRpcUrl: string, emit: (event: LockEvent) => void): Promise<void> {
     const connection = new Connection(overrideRpcUrl || rpcUrl, 'processed');
     const programId = new PublicKey(
-      process.env.STELLARDAO_SOL_VAULT ?? PublicKey.default.toBase58(),
+      process.env.STELLAR_PAYMENT_GATEWAY_SOL_VAULT ?? PublicKey.default.toBase58(),
     );
 
     // Subscribe to program account changes — the simplest scaffold that

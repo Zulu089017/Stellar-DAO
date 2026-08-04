@@ -1,12 +1,12 @@
 {
-  "name": "@stellardao/cli",
+  "name": "@stellar-payment-gateway/cli",
   "version": "0.2.0",
   "private": true,
-  "description": "Command-line interface for StellarDAO operations",
+  "description": "Command-line interface for Stellar Payment Gateway operations",
   "type": "module",
   "main": "./src/index.ts",
   "bin": {
-    "stellardao": "./src/index.ts"
+    "stellar-payment-gateway": "./src/index.ts"
   },
   "scripts": {
     "cli": "tsx src/index.ts",
@@ -17,8 +17,8 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@stellardao/eslint-config": "workspace:*",
-    "@stellardao/tsconfig": "workspace:*",
+    "@stellar-payment-gateway/eslint-config": "workspace:*",
+    "@stellar-payment-gateway/tsconfig": "workspace:*",
     "@types/node": "^20.14.10",
     "tsx": "^4.19.0",
     "typescript": "^5.6.3",

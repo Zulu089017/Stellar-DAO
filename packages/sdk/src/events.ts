@@ -1,7 +1,7 @@
 /**
  * SDK event subscription helper.
  *
- * Provides a typed, ergonomic API for subscribing to StellarDAO
+ * Provides a typed, ergonomic API for subscribing to Stellar Payment Gateway
  * events from the Horizon SSE bridge. Automatically handles
  * reconnection, cursor tracking, and event type filtering.
  *
@@ -143,7 +143,7 @@ export class EventSubscription {
 }
 
 /**
- * Create a typed event subscription to the StellarDAO SSE bridge.
+ * Create a typed event subscription to the Stellar Payment Gateway SSE bridge.
  * Browser-only — see class documentation.
  */
 export function createEventSubscription(baseUrl: string): EventSubscription {

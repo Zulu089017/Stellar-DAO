@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { SOURCE_CHAINS, chainLabel, type SourceChainId } from '@stellardao/shared';
+import { SOURCE_CHAINS, chainLabel, type SourceChainId } from '@stellar-payment-gateway/shared';
 
 /**
  * Source-chain filter chips for `/transactions`.

@@ -4,8 +4,8 @@ import { FeeCalculator } from '@/components/wrap/fee-calculator';
 import { WrapPanel } from '@/components/wrap/wrap-panel';
 
 export const metadata: Metadata = {
-  title: 'Wrap · StellarDAO',
-  description: 'Lock an ERC-20, SPL, or Polygon token and receive the StellarDAO wrapper on Stellar.',
+  title: 'Wrap · Stellar Payment Gateway',
+  description: 'Lock an ERC-20, SPL, or Polygon token and receive the Stellar Payment Gateway wrapper on Stellar.',
 };
 
 export default function WrapPage() {
@@ -18,7 +18,7 @@ export default function WrapPage() {
             <span className="text-stellar-aurora">any source-chain token</span>.
           </h1>
           <p className="max-w-2xl text-sm text-stellar-haze">
-            Select a source chain and token, lock it in the matching StellarDAO vault, and watch
+            Select a source chain and token, lock it in the matching Stellar Payment Gateway vault, and watch
             the operator set sign + the bridge mint on Stellar in real time.
           </p>
         </header>
@@ -30,7 +30,7 @@ export default function WrapPage() {
           <h2 className="text-sm font-semibold uppercase tracking-widest text-stellar-haze">How a wrap settles</h2>
           <ol className="mt-4 space-y-4 text-sm text-stellar-cloud">
             {[
-              ['Lock', 'Submit your tx on the source chain: tokens are custodied in the StellarDAO vault.'],
+              ['Lock', 'Submit your tx on the source chain: tokens are custodied in the Stellar Payment Gateway vault.'],
               ['Attest', 'Operators off-chain sign the canonical bridge digest until threshold is met.'],
               ['Mint', 'Relayer posts the signed payload to the bridge contract — wrapper-token mints to your Stellar address.'],
               ['Confirm', 'Soroban emits the event, Horizon indexes it, and you see the credit land here in under 5 s.'],

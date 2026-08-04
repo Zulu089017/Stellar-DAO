@@ -5,7 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "StellarDAO bridge contract — verifies relayer attestations and routes mint/burn to wrapper-tokens"
+description = "Stellar Payment Gateway bridge contract — verifies relayer attestations and routes mint/burn to wrapper-tokens"
 
 [lib]
 crate-type = ["cdylib"]

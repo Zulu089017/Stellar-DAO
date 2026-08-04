@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════
-# StellarDAO — Makefile
+# Stellar Payment Gateway — Makefile
 # ═══════════════════════════════════════════════════════════════
 # Convenience commands for development, testing, and deployment.
 # ═══════════════════════════════════════════════════════════════
@@ -27,13 +27,13 @@ dev: ## Start all services in parallel (API + Web + Relayer)
 	pnpm dev
 
 dev-api: ## Start API only
-	pnpm --filter @stellardao/api dev
+	pnpm --filter @stellar-payment-gateway/api dev
 
 dev-web: ## Start Web dashboard only
-	pnpm --filter @stellardao/web dev
+	pnpm --filter @stellar-payment-gateway/web dev
 
 dev-relayer: ## Start Relayer only
-	pnpm --filter @stellardao/relayer dev
+	pnpm --filter @stellar-payment-gateway/relayer dev
 
 # ── Build ─────────────────────────────────────────────────────
 build: ## Build all packages and apps
@@ -50,20 +50,20 @@ test: ## Run all tests
 	pnpm test
 
 test-api: ## Run API tests only
-	pnpm --filter @stellardao/api test
+	pnpm --filter @stellar-payment-gateway/api test
 
 test-web: ## Run Web tests only
-	pnpm --filter @stellardao/web test
+	pnpm --filter @stellar-payment-gateway/web test
 
 test-contracts: ## Run Soroban contract tests
 	pnpm contracts:test
 
 test-watch: ## Run tests in watch mode
-	pnpm --filter @stellardao/web test -- --watch
+	pnpm --filter @stellar-payment-gateway/web test -- --watch
 
 test-coverage: ## Run tests with coverage report
-	pnpm --filter @stellardao/api test -- --coverage
-	pnpm --filter @stellardao/web test -- --coverage
+	pnpm --filter @stellar-payment-gateway/api test -- --coverage
+	pnpm --filter @stellar-payment-gateway/web test -- --coverage
 
 # ── Quality ───────────────────────────────────────────────────
 lint: ## Lint all code

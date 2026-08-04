@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { StatusDot } from '@stellardao/ui';
+import { StatusDot } from '@stellar-payment-gateway/ui';
 
 describe('StatusDot', () => {
   it('renders status text by default', () => {

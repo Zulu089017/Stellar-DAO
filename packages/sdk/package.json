@@ -1,5 +1,5 @@
 {
-  "name": "@stellardao/sdk",
+  "name": "@stellar-payment-gateway/sdk",
   "version": "0.1.0",
   "private": true,
   "description": "High-level Stellar client: Horizon helpers, asset ops, bridge/factory/wrapper-token wrappers.",
@@ -21,12 +21,12 @@
     "@noble/curves": "^1.6.0",
     "@noble/hashes": "^1.5.0",
     "@stellar/stellar-sdk": "^12.0.0",
-    "@stellardao/shared": "workspace:*",
+    "@stellar-payment-gateway/shared": "workspace:*",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@stellardao/eslint-config": "workspace:*",
-    "@stellardao/tsconfig": "workspace:*",
+    "@stellar-payment-gateway/eslint-config": "workspace:*",
+    "@stellar-payment-gateway/tsconfig": "workspace:*",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4",
     "eslint": "^9.13.0"

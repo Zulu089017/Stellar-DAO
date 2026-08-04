@@ -1,4 +1,4 @@
-# ── StellarDAO Relayer Dockerfile ──────────────────────────────
+# ── Stellar Payment Gateway Relayer Dockerfile ──────────────────────────────
 # Multi-stage build for the cross-chain relayer service.
 # Watches Ethereum, Solana, and Polygon for Lock events.
 
@@ -11,13 +11,13 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json tsconfig.base.js
 COPY packages/shared/package.json packages/shared/
 COPY packages/sdk/package.json packages/sdk/
 COPY apps/relayer/package.json apps/relayer/
-RUN pnpm install --frozen-lockfile --filter @stellardao/relayer...
+RUN pnpm install --frozen-lockfile --filter @stellar-payment-gateway/relayer...
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/relayer/node_modules ./apps/relayer/node_modules
 COPY . .
-RUN pnpm --filter @stellardao/relayer build
+RUN pnpm --filter @stellar-payment-gateway/relayer build
 
 FROM base AS runner
 ENV NODE_ENV=production

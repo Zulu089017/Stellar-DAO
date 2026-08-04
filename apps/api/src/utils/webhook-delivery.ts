@@ -23,7 +23,7 @@ export async function deliverWebhook(
         const signature = createHmac('sha256', secret)
           .update(JSON.stringify(payload))
           .digest('hex');
-        headers['X-Stellar-DAO-Signature'] = signature;
+        headers['X-Stellar-Payment-Gateway-Signature'] = signature;
       }
 
       const response = await fetch(url, {

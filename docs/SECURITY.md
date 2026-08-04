@@ -1,6 +1,6 @@
 # Security Audit Checklist & Threat Model
 
-StellarDAO security documentation for auditors and developers.
+Stellar Payment Gateway security documentation for auditors and developers.
 
 ## Threat Model
 
@@ -98,6 +98,6 @@ StellarDAO security documentation for auditors and developers.
 
 ## Responsible Disclosure
 Security vulnerabilities should be reported to:
-**security@stellardao.dev**
+**security@stellar-payment-gateway.dev**
 
 Please allow 48 hours for acknowledgment and 7 days for remediation before public disclosure.

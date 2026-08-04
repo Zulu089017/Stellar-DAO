@@ -1,4 +1,4 @@
-import type { LockPayload, SourceChainId } from '@stellardao/shared';
+import type { LockPayload, SourceChainId } from '@stellar-payment-gateway/shared';
 
 /** Output of one watcher iteration. */
 export type LockEvent = Omit<LockPayload, 'sourceChain'>;

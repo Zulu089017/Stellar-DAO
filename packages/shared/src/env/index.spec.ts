@@ -1,5 +1,5 @@
 /**
- * `parseEnv` spec for `@stellardao/shared`.
+ * `parseEnv` spec for `@stellar-payment-gateway/shared`.
  *
  * Three schemas are tested:
  *   - `parseEnv.bridge()` — relayer + factory/bridge contract ids +

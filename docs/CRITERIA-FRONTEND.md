@@ -1,6 +1,6 @@
 # Frontend Quality Criteria
 
-This document defines the quality gates for the StellarDAO web frontend
+This document defines the quality gates for the Stellar Payment Gateway web frontend
 (`apps/web`). These criteria align with grant platform expectations
 (Drips Wave, GrantFox) and ensure a production-grade dashboard.
 
@@ -10,7 +10,7 @@ This document defines the quality gates for the StellarDAO web frontend
 - **Styling**: Tailwind CSS v3 with dark/light theme system
 - **State**: React hooks + Horizon SSE events (no global store)
 - **Wallet**: Freighter + Albedo browser extension integration
-- **Components**: Shared primitives from `@stellardao/ui` package
+- **Components**: Shared primitives from `@stellar-payment-gateway/ui` package
 
 ## Quality Gates
 
@@ -54,7 +54,7 @@ This document defines the quality gates for the StellarDAO web frontend
 - [ ] Responsive layout regression tests at 3 breakpoints
 
 ### 7. Code Quality
-- [ ] ESLint passes with `@stellardao/eslint-config/react`
+- [ ] ESLint passes with `@stellar-payment-gateway/eslint-config/react`
 - [ ] Prettier formatting applied
 - [ ] No console.log in production code (use structured logger)
 - [ ] Import order: React → external libs → workspace packages → local

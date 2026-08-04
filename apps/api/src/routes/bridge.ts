@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import type { BurnRequest, MintRequest, Transaction } from '@stellardao/shared';
+import type { BurnRequest, MintRequest, Transaction } from '@stellar-payment-gateway/shared';
 
 import { bridge } from '../soroban/index.js';
 import { transactionRepository } from '../db/repositories/transaction-repository.js';

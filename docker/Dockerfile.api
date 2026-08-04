@@ -1,4 +1,4 @@
-# ── StellarDAO API Dockerfile ─────────────────────────────────
+# ── Stellar Payment Gateway API Dockerfile ─────────────────────────────────
 # Multi-stage build for the Fastify REST + SSE API service.
 # Produces a lean production image with pnpm and tsc-compiled JS.
 
@@ -14,13 +14,13 @@ COPY packages/soroban-client/package.json packages/soroban-client/
 COPY packages/eslint-config/package.json packages/eslint-config/
 COPY packages/tsconfig/package.json packages/tsconfig/
 COPY apps/api/package.json apps/api/
-RUN pnpm install --frozen-lockfile --filter @stellardao/api...
+RUN pnpm install --frozen-lockfile --filter @stellar-payment-gateway/api...
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/api/node_modules ./apps/api/node_modules
 COPY . .
-RUN pnpm --filter @stellardao/api build
+RUN pnpm --filter @stellar-payment-gateway/api build
 
 FROM base AS runner
 ENV NODE_ENV=production

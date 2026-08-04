@@ -1,8 +1,8 @@
-# StellarDAO Smart Contracts
+# Stellar Payment Gateway Smart Contracts
 
 ## Overview
 
-StellarDAO consists of six Soroban smart contracts written in Rust, all pinned to `soroban-sdk = "=21.7.7"`. Each contract is compiled to WebAssembly (WASM) and deployed to the Stellar network via `stellar contract deploy`.
+Stellar Payment Gateway consists of six Soroban smart contracts written in Rust, all pinned to `soroban-sdk = "=21.7.7"`. Each contract is compiled to WebAssembly (WASM) and deployed to the Stellar network via `stellar contract deploy`.
 
 ## Contract Architecture
 

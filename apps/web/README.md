@@ -1,6 +1,6 @@
-# `@stellardao/web`
+# `@stellar-payment-gateway/web`
 
-Next.js 15 dashboard for StellarDAO. App Router, React Server Components for
+Next.js 15 dashboard for Stellar Payment Gateway. App Router, React Server Components for
 the data-heavy pages, client components for the live feed, wallet connect,
 and the wrap form. Styling is built on top of Tailwind with a small set of
 design tokens (`stellar-*` colors, `aurora-gradient`, `glow` shadow).
@@ -23,13 +23,13 @@ design tokens (`stellar-*` colors, `aurora-gradient`, `glow` shadow).
 - **TailwindCSS** with custom design tokens
 - **TanStack React Query**
 - **`@stellar/stellar-sdk`** for transaction building on the client
-- **`@stellardao/shared` / `sdk` / `ui`** from the rest of the polyrepo
+- **`@stellar-payment-gateway/shared` / `sdk` / `ui`** from the rest of the polyrepo
 
 ## Local development
 
 ```bash
 pnpm dev                  # start next.js on :3000
-pnpm --filter @stellardao/api dev       # in another shell
+pnpm --filter @stellar-payment-gateway/api dev       # in another shell
 ```
 
 The landing page reads from `NEXT_PUBLIC_API_BASE_URL` (defaults to

@@ -1,5 +1,5 @@
 /**
- * Response caching middleware for the StellarDAO API.
+ * Response caching middleware for the Stellar Payment Gateway API.
  *
  * Sets Cache-Control headers on read-only GET endpoints to
  * reduce load on Horizon/Soroban RPC. Different TTLs for

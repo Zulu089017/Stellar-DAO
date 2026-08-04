@@ -1,11 +1,11 @@
 import pino from 'pino';
 import { Keypair } from '@stellar/stellar-sdk';
-import { parseEnv, type SourceChainId } from '@stellardao/shared';
+import { parseEnv, type SourceChainId } from '@stellar-payment-gateway/shared';
 import {
   BridgeContract,
   buildLockDigest,
   signEd25519,
-} from '@stellardao/sdk';
+} from '@stellar-payment-gateway/sdk';
 
 import { ethereumWatcher } from './sources/ethereum.js';
 import { solanaWatcher } from './sources/solana.js';
@@ -24,7 +24,7 @@ const log = pino({
 const env = parseEnv.api();
 
 async function main() {
-  log.info({ network: env.STELLAR_NETWORK }, 'StellarDAO relayer starting');
+  log.info({ network: env.STELLAR_NETWORK }, 'Stellar Payment Gateway relayer starting');
 
   if (!env.RELAYER_PUBLIC_KEY || !env.RELAYER_SECRET_KEY) {
     log.warn('relayer signing key not set — submissions will be dry-run');

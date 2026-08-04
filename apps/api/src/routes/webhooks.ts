@@ -18,7 +18,7 @@
  * loop already does this (see `apps/relayer/operator/relay-pipeline
  * .ts`).
  *
- * Security: HMAC-SHA256 verification of `X-Stellar-DAO-Signature`
+ * Security: HMAC-SHA256 verification of `X-Stellar-Payment-Gateway-Signature`
  * is MANDATORY when `RELAYER_HMAC_SECRET` is configured. The
  * signature is `hex(hmac_sha256(RELAYER_HMAC_SECRET,
  * JSON.stringify(body))`; the server compares in constant time via
@@ -41,7 +41,7 @@ import crypto from 'node:crypto';
 
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { parseEnv } from '@stellardao/shared';
+import { parseEnv } from '@stellar-payment-gateway/shared';
 
 import { assetRepository } from '../db/repositories/asset-repository.js';
 import { broadcastAssetUpdate } from '../sse/event-bus.js';
@@ -94,9 +94,9 @@ export const webhookRoutes = async (app: FastifyInstance): Promise<void> => {
       const env = parseEnv.api();
       const secret = env.RELAYER_HMAC_SECRET;
       if (secret) {
-        const provided = req.headers['x-stellar-dao-signature'];
+        const provided = req.headers['x-stellar-payment-gateway-signature'];
         if (typeof provided !== 'string' || provided.length === 0) {
-          return reply.unauthorized('missing X-Stellar-DAO-Signature');
+          return reply.unauthorized('missing X-Stellar-Payment-Gateway-Signature');
         }
         // Producer-coupling assumption: the partner MUST compute the
         // signature as `hex(hmac_sha256(RELAYER_HMAC_SECRET,
@@ -122,7 +122,7 @@ export const webhookRoutes = async (app: FastifyInstance): Promise<void> => {
           providedBuf.length !== expectedBuf.length ||
           !crypto.timingSafeEqual(providedBuf, expectedBuf)
         ) {
-          return reply.unauthorized('X-Stellar-DAO-Signature mismatch');
+          return reply.unauthorized('X-Stellar-Payment-Gateway-Signature mismatch');
         }
       }
 

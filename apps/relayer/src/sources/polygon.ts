@@ -6,8 +6,8 @@ import type { LockEvent, SourceAdapter } from './types.js';
  * Polygon adapter.
  *
  * Reads `Locked(address,uint256,bytes32,address)` events from the
- * StellarDAO Vault contract deployed on Polygon. The vault program is
- * deliberately stubbed — production deploys supply `STELLARDAO_POLYGON_VAULT`
+ * Stellar Payment Gateway Vault contract deployed on Polygon. The vault program is
+ * deliberately stubbed — production deploys supply `STELLAR_PAYMENT_GATEWAY_POLYGON_VAULT`
  * with the actual ERC-20 vault contract address.
  *
  * Mirrors `ethereum.ts` exactly: same event signature, same payload
@@ -17,9 +17,9 @@ import type { LockEvent, SourceAdapter } from './types.js';
 export const polygonWatcher = async (rpcUrl: string): Promise<SourceAdapter> => ({
   async watch(overrideRpcUrl: string, emit: (event: LockEvent) => void): Promise<void> {
     const provider = new ethers.JsonRpcProvider(overrideRpcUrl || rpcUrl);
-    // TODO: replace with the actual vault address used by StellarDAO on Polygon.
+    // TODO: replace with the actual vault address used by Stellar Payment Gateway on Polygon.
     const vault = new ethers.Contract(
-      process.env.STELLARDAO_POLYGON_VAULT ?? ethers.ZeroAddress,
+      process.env.STELLAR_PAYMENT_GATEWAY_POLYGON_VAULT ?? ethers.ZeroAddress,
       [
         'event Locked(address indexed token, uint256 amount, bytes32 indexed nonce, address indexed sender)',
       ],

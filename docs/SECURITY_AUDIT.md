@@ -6,7 +6,7 @@
 ## Scope
 
 This document records the findings from the internal security self-review of the
-StellarDAO codebase. Each finding includes severity, impact, and remediation status.
+Stellar Payment Gateway codebase. Each finding includes severity, impact, and remediation status.
 
 ## Summary
 
@@ -171,5 +171,5 @@ deployments
 
 ## Responsible Disclosure
 
-Report vulnerabilities to **security@stellardao.dev**.
+Report vulnerabilities to **security@stellar-payment-gateway.dev**.
 Allow 48 hours for acknowledgment and 7 days for remediation.

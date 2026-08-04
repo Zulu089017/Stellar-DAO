@@ -1,5 +1,5 @@
 /**
- * Logo mark — a small, gradient-orbiting icon evocative of Stellar consensus.
+ * Logo mark — a small, gradient-orbiting icon for Stellar Payment Gateway.
  */
 export const LogoMark = ({ size = 28 }: { size?: number }) => (
   <span

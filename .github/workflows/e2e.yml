@@ -1,4 +1,4 @@
-# ── StellarDAO E2E test workflow ───────────────────────────────
+# ── Stellar Payment Gateway E2E test workflow ───────────────────────────────
 # Runs Playwright tests against the Next.js dashboard on every PR
 # and push to main. Viewports are sharded across a matrix so
 # desktop, mobile and tablet checks run in parallel.

@@ -1,4 +1,4 @@
-# StellarDAO
+# Stellar Payment Gateway
 
 [![CI](https://github.com/Zulu089017/Stellar-DAO/actions/workflows/ci.yml/badge.svg)](https://github.com/Zulu089017/Stellar-DAO/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -9,7 +9,7 @@
 > A cross-chain wrapping middleware for the Stellar ecosystem.
 > Spin up wrapped versions of your Ethereum, Solana, or Polygon tokens on Stellar in minutes — leveraging Stellar's ultra-low fees and Horizon-powered real-time settlement.
 
-StellarDAO is a **polyrepo (monorepo)** that ships:
+Stellar Payment Gateway is a **polyrepo (monorepo)** that ships:
 
 - **Soroban smart contracts** — `bridge`, `factory`, and a `wrapper-token` template that mints/burns on Stellar in response to signed cross-chain messages.
 - **A relayer** that watches source chains for `Lock` events and posts signed attestations to the `bridge` contract.
@@ -44,7 +44,7 @@ StellarDAO is a **polyrepo (monorepo)** that ships:
 ## Repository layout (polyrepo)
 
 ```
-stellardao/
+stellar-payment-gateway/
 ├── apps/
 │   ├── api/        Fastify REST + SSE   (service layer over Horizon)
 │   ├── relayer/    Node watcher        (off-chain cross-chain orchestrator)
@@ -101,9 +101,9 @@ pnpm dev                      # run web/api/relayer in parallel
 Or run individual pieces:
 
 ```bash
-pnpm --filter @stellardao/web dev      # next.js dashboard only
-pnpm --filter @stellardao/api dev      # fastify api only
-pnpm --filter @stellardao/relayer dev  # relayer only
+pnpm --filter @stellar-payment-gateway/web dev      # next.js dashboard only
+pnpm --filter @stellar-payment-gateway/api dev      # fastify api only
+pnpm --filter @stellar-payment-gateway/relayer dev  # relayer only
 ```
 
 For deeper context, see:
@@ -120,7 +120,7 @@ For deeper context, see:
 
 ## Grant Platforms
 
-StellarDAO is built for participation on open-source grant and bounty platforms:
+Stellar Payment Gateway is built for participation on open-source grant and bounty platforms:
 
 | Platform | Focus | Status |
 |----------|-------|--------|

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   __resetEnvCache,
   type AssetRegistryEntry,
-} from '@stellardao/shared';
+} from '@stellar-payment-gateway/shared';
 
 import {
   assetRepository,

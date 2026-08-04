@@ -10,8 +10,8 @@
  * For typed access to a single contract's method list, prefer the per-contract
  * subpath imports — they keep the type alias narrow and avoid the renaming:
  *
- *   import { METHOD_NAMES } from '@stellardao/soroban-client/bridge';
- *   import type { MethodName } from '@stellardao/soroban-client/bridge';
+ *   import { METHOD_NAMES } from '@stellar-payment-gateway/soroban-client/bridge';
+ *   import type { MethodName } from '@stellar-payment-gateway/soroban-client/bridge';
  *
  * Use the barrel when you want a single import surface — for example, to
  * build a `CONTRACT_METHODS` lookup table in a tooltip or a /diagnostics

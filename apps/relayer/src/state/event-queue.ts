@@ -1,4 +1,4 @@
-import type { Transaction } from '@stellardao/shared';
+import type { Transaction } from '@stellar-payment-gateway/shared';
 
 /**
  * Input shape for `eventQueue.push`.

@@ -15,7 +15,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import sensible from '@fastify/sensible';
 import { Keypair } from '@stellar/stellar-sdk';
-import { parseEnv } from '@stellardao/shared';
+import { parseEnv } from '@stellar-payment-gateway/shared';
 
 import { initAssetRepository } from './db/repositories/asset-repository.js';
 import { initTransactionRepository } from './db/repositories/transaction-repository.js';
@@ -49,7 +49,7 @@ export const createServer = async (opts: ServerOptions = {}): Promise<FastifyIns
     logger: opts.logger ?? false,
     // FSTDEP023: top-level `disableRequestLogging` removed for
     // fastify@6 forward-compat. Verified: with `logger: false` and
-    // 89/89 `@stellardao/api` tests passing, per-request log lines
+    // 89/89 `@stellar-payment-gateway/api` tests passing, per-request log lines
     // stay silent via pino's full opt-out — no separate toggle is
     // needed. If a future regression surfaces request lines in test
     // stderr, reintroduce a granular toggle via

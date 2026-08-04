@@ -87,7 +87,7 @@ test.describe('Theme Switching', () => {
 
         const header = page.locator('header');
         await expect(header).toBeVisible();
-        await expect(header.getByText('StellarDAO')).toBeVisible();
+        await expect(header.getByText('Stellar Payment Gateway')).toBeVisible();
       }
     });
   });

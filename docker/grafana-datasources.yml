@@ -1,4 +1,4 @@
-# Grafana datasource provisioning for StellarDAO
+# Grafana datasource provisioning for Stellar Payment Gateway
 apiVersion: 1
 
 datasources:

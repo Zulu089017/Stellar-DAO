@@ -14,8 +14,8 @@ import { Buffer } from 'node:buffer';
 
 import { sha256 } from '@noble/hashes/sha256';
 import { ed25519 } from '@noble/curves/ed25519';
-import type { LockPayload, UnlockPayload } from '@stellardao/shared';
-import { SIGNATURE_TAGS } from '@stellardao/shared';
+import type { LockPayload, UnlockPayload } from '@stellar-payment-gateway/shared';
+import { SIGNATURE_TAGS } from '@stellar-payment-gateway/shared';
 
 const encoder = new TextEncoder();
 

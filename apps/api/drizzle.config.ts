@@ -5,6 +5,6 @@ export default defineConfig({
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgres://stellardao:stellardao@localhost:5432/stellardao',
+    url: process.env.DATABASE_URL ?? 'postgres://stellar-payment-gateway:stellar-payment-gateway@localhost:5432/stellar-payment-gateway',
   },
 });

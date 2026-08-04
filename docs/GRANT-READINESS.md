@@ -1,6 +1,6 @@
 # Grant Platform Readiness
 
-This document tracks StellarDAO's readiness for grant and bounty platforms:
+This document tracks Stellar Payment Gateway's readiness for grant and bounty platforms:
 **[Drips Network](https://drips.network)** and **[GrantFox](https://grantfox.xyz)**.
 
 ## Drips Network (Drips Wave)

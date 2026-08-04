@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { parseEnv } from '@stellardao/shared';
+import { parseEnv } from '@stellar-payment-gateway/shared';
 
 export const revalidate = 30;
 // Force dynamic rendering so Next.js doesn't try to prerender this route

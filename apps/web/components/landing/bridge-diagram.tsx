@@ -14,7 +14,7 @@ export const BridgeDiagram = () => (
       viewBox="0 0 400 300"
       className="relative h-full w-full"
       role="img"
-      aria-label="Three source chains feeding into the StellarDAO bridge and out to Stellar."
+      aria-label="Three source chains feeding into the Stellar Payment Gateway bridge and out to Stellar."
     >
       <defs>
         <linearGradient id="packet" x1="0" x2="1" y1="0" y2="0">

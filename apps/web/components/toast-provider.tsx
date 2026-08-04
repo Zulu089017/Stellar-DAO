@@ -1,5 +1,5 @@
 /**
- * Toast notification system for the StellarDAO dashboard.
+ * Toast notification system for the Stellar Payment Gateway dashboard.
  *
  * Provides a lightweight, accessible toast notification system
  * for transaction status updates, error alerts, and governance

@@ -5,7 +5,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "StellarDAO factory — deploys and indexes the wrapper-token contracts."
+description = "Stellar Payment Gateway factory — deploys and indexes the wrapper-token contracts."
 
 [lib]
 crate-type = ["cdylib"]

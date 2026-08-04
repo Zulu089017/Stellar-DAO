@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { chainLabel, isSourceChain } from '@stellardao/shared';
+import { chainLabel, isSourceChain } from '@stellar-payment-gateway/shared';
 
 import { ChainBadge } from '@/components/atoms/chain-badge';
 import { AddressDisplay } from '@/components/atoms/address-display';
@@ -13,7 +13,7 @@ type Params = { chain: string; address: string };
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { address, chain } = await params;
   return {
-    title: `${address.slice(0, 6)}…${address.slice(-4)} · StellarDAO`,
+    title: `${address.slice(0, 6)}…${address.slice(-4)} · Stellar Payment Gateway`,
     description: `Wrap detail for ${chainLabel(chain as never)?.name ?? chain} token ${address}.`,
   };
 }

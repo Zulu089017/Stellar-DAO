@@ -2,9 +2,9 @@ import crypto from 'node:crypto';
 
 import pino from 'pino';
 import type { Keypair } from '@stellar/stellar-sdk';
-import type { BridgeContract } from '@stellardao/sdk';
-import { type buildLockDigest, type signEd25519 } from '@stellardao/sdk';
-import type { SourceChainId, Transaction } from '@stellardao/shared';
+import type { BridgeContract } from '@stellar-payment-gateway/sdk';
+import { type buildLockDigest, type signEd25519 } from '@stellar-payment-gateway/sdk';
+import type { SourceChainId, Transaction } from '@stellar-payment-gateway/shared';
 
 import { type eventQueue } from '../state/event-queue.js';
 import type { LockEvent } from '../sources/types.js';

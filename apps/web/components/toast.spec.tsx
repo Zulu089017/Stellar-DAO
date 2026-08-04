@@ -6,7 +6,7 @@ import { ToastContainer } from './toast';
 // Access the toast function directly via the custom event
 function dispatchToast(message: string, type: 'success' | 'error' | 'info' = 'info', txHash?: string) {
   window.dispatchEvent(
-    new CustomEvent('stellardao-toast', {
+    new CustomEvent('stellar-payment-gateway-toast', {
       detail: { id: crypto.randomUUID(), message, type, txHash },
     }),
   );

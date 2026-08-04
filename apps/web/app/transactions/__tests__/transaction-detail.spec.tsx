@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import type { Transaction } from '@stellardao/shared';
+import type { Transaction } from '@stellar-payment-gateway/shared';
 
 // ── Module mocks ─────────────────────────────────────────────────
 

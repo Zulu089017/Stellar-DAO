@@ -86,7 +86,7 @@ test.describe('Transaction History View', () => {
       await page.goto('/transactions');
       const title = await page.title();
       expect(title).toContain('Transactions');
-      expect(title).toContain('StellarDAO');
+      expect(title).toContain('Stellar Payment Gateway');
     });
   });
 

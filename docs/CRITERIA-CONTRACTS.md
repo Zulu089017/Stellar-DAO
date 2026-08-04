@@ -1,6 +1,6 @@
 # Smart Contract Quality Criteria
 
-This document defines the quality gates for StellarDAO Soroban smart contracts
+This document defines the quality gates for Stellar Payment Gateway Soroban smart contracts
 (`contracts/`). These criteria align with Soroban best practices, security audit
 readiness, and grant platform expectations.
 

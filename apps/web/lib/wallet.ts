@@ -1,5 +1,5 @@
 /**
- * Wallet connector — Freighter + Albedo integration for the StellarDAO dashboard.
+ * Wallet connector — Freighter + Albedo integration for the Stellar Payment Gateway dashboard.
  *
  * Supports:
  *   - Freighter browser extension

@@ -1,5 +1,5 @@
 {
-  "extends": "@stellardao/tsconfig/node.json",
+  "extends": "@stellar-payment-gateway/tsconfig/node.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src"

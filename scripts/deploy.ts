@@ -8,7 +8,7 @@
  *
  * Requirements:
  *   stellar-cli installed (https://developers.stellar.org/docs/tools/developer-tools)
- *   Source-account keys available (default pulls from $STELLARDAO_DEPLOYER_SECRET).
+ *   Source-account keys available (default pulls from $STELLAR_PAYMENT_GATEWAY_DEPLOYER_SECRET).
  */
 
 import { spawn } from 'node:child_process';
@@ -62,7 +62,7 @@ const main = async () => {
   log('deploying bridge');
   const bridgeId = await deployContract(
     resolve(root, 'contracts/bridge/target/wasm32-unknown-unknown/release/bridge.wasm'),
-    'stellardao_bridge',
+    'stellar_payment_gateway_bridge',
   );
   setEnv('BRIDGE_CONTRACT_ID', bridgeId);
   setEnv('NEXT_PUBLIC_BRIDGE_CONTRACT_ID', bridgeId);
@@ -70,14 +70,14 @@ const main = async () => {
   log('deploying wrapper-token template');
   const wrapperTokenId = await deployContract(
     resolve(root, 'contracts/wrapper-token/target/wasm32-unknown-unknown/release/wrapper_token.wasm'),
-    'stellardao_wrapper_token_template',
+    'stellar_payment_gateway_wrapper_token_template',
   );
   setEnv('WRAPPER_TOKEN_TEMPLATE_ID', wrapperTokenId);
 
   log('deploying factory');
   const factoryId = await deployContract(
     resolve(root, 'contracts/factory/target/wasm32-unknown-unknown/release/factory.wasm'),
-    'stellardao_factory',
+    'stellar_payment_gateway_factory',
   );
   setEnv('FACTORY_CONTRACT_ID', factoryId);
   setEnv('NEXT_PUBLIC_FACTORY_CONTRACT_ID', factoryId);

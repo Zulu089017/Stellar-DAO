@@ -4,7 +4,7 @@ import type {
   SourceChainId,
   Transaction,
   TxStatus,
-} from '@stellardao/shared';
+} from '@stellar-payment-gateway/shared';
 
 import { broadcastTransaction } from '../../sse/event-bus.js';
 import { bootstrapSchema, getDb, __closeDbForTest } from '../pool.js';

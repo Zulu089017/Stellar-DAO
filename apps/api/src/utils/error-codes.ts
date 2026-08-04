@@ -1,5 +1,5 @@
 /**
- * Structured error codes for the StellarDAO API.
+ * Structured error codes for the Stellar Payment Gateway API.
  *
  * Every error response from the API carries one of these codes so
  * integrators can match on a stable identifier rather than parsing

@@ -8,7 +8,7 @@ import type {
   Transaction,
   SourceChainId,
   TxStatus,
-} from '@stellardao/shared';
+} from '@stellar-payment-gateway/shared';
 
 const DEFAULT_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:4000';
 

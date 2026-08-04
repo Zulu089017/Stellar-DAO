@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { AssetRegistryEntry } from '@stellardao/shared';
+import type { AssetRegistryEntry } from '@stellar-payment-gateway/shared';
 
 import { AssetsTable } from '@/components/dashboard/assets-table';
 

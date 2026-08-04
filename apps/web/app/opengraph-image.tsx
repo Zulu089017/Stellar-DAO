@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'StellarDAO — Cross-Chain Wraps on Stellar';
+export const alt = 'Stellar Payment Gateway — Cross-Chain Wraps on Stellar';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -52,7 +52,7 @@ export default function Image() {
               letterSpacing: '-0.02em',
             }}
           >
-            StellarDAO
+            Stellar Payment Gateway
           </span>
           <span
             style={{

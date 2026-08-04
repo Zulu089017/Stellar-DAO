@@ -31,9 +31,9 @@ pnpm typecheck
 pnpm test
 
 # Run the stack
-pnpm --filter @stellardao/api dev         # Fastify on :4000
-pnpm --filter @stellardao/relayer dev     # cross-chain watcher in cluster mode
-pnpm --filter @stellardao/web dev         # Next.js on :3000
+pnpm --filter @stellar-payment-gateway/api dev         # Fastify on :4000
+pnpm --filter @stellar-payment-gateway/relayer dev     # cross-chain watcher in cluster mode
+pnpm --filter @stellar-payment-gateway/web dev         # Next.js on :3000
 
 # Or run everything in parallel via Turbo:
 pnpm dev
@@ -64,7 +64,7 @@ Writes `packages/soroban-client/src/bindings/{bridge,factory,wrapper-token}.ts`.
 | Task                                         | Command |
 |----------------------------------------------|---------|
 | Edit a contract                              | `cd contracts/<name> && cargo test` |
-| Edit the API                                 | `pnpm --filter @stellardao/api dev` |
-| Edit the dashboard                           | `pnpm --filter @stellardao/web dev` |
-| Edit the relayer                             | `pnpm --filter @stellardao/relayer dev` |
+| Edit the API                                 | `pnpm --filter @stellar-payment-gateway/api dev` |
+| Edit the dashboard                           | `pnpm --filter @stellar-payment-gateway/web dev` |
+| Edit the relayer                             | `pnpm --filter @stellar-payment-gateway/relayer dev` |
 | Reset all build artefacts                    | `pnpm clean` |

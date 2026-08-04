@@ -3,7 +3,7 @@ import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import sensible from '@fastify/sensible';
 import { Keypair } from '@stellar/stellar-sdk';
-import { parseEnv } from '@stellardao/shared';
+import { parseEnv } from '@stellar-payment-gateway/shared';
 
 import { initAssetRepository } from './db/repositories/asset-repository.js';
 import { initTransactionRepository } from './db/repositories/transaction-repository.js';
@@ -88,5 +88,5 @@ app.listen({ port: env.API_PORT, host: '0.0.0.0' }, (err, address) => {
     app.log.error(err);
     throw err;
   }
-  app.log.info(`StellarDAO API listening at ${address}`);
+  app.log.info(`Stellar Payment Gateway API listening at ${address}`);
 });

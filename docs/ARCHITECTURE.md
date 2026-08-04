@@ -1,6 +1,6 @@
 # Architecture
 
-StellarDAO is a **three-layer** system that wraps ERC-20, SPL, and Polygon
+Stellar Payment Gateway is a **three-layer** system that wraps ERC-20, SPL, and Polygon
 tokens on Stellar. The diagram below traces a wrap from the moment a
 user locks tokens on a source chain to the moment the wrapper-token lands
 in their Stellar wallet.

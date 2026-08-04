@@ -4,7 +4,7 @@ import { DelegationPanel } from '@/components/governance/delegation-panel';
 import { ProposalList } from '@/components/governance/proposal-list';
 
 export const metadata: Metadata = {
-  title: 'Governance · StellarDAO',
+  title: 'Governance · Stellar Payment Gateway',
   description: 'DAO governance — propose, vote, and execute protocol changes.',
 };
 
@@ -14,7 +14,7 @@ export default function GovernancePage() {
       <section>
         <h1 className="font-display text-3xl font-semibold text-white">Governance</h1>
         <p className="mt-2 max-w-2xl text-sm text-stellar-haze">
-          StellarDAO is governed by token holders. Create proposals, delegate votes,
+          Stellar Payment Gateway is governed by token holders. Create proposals, delegate votes,
           and shape the future of the protocol.
         </p>
       </section>

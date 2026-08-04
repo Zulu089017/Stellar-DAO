@@ -1,6 +1,6 @@
-# `@stellardao/soroban-client`
+# `@stellar-payment-gateway/soroban-client`
 
-Auto-generated TypeScript bindings for the three StellarDAO contracts
+Auto-generated TypeScript bindings for the three Stellar Payment Gateway contracts
 (`bridge`, `factory`, `wrapper-token`).
 
 These shims are produced by `pnpm bindings:generate`, which delegates to
@@ -32,8 +32,8 @@ overwritten with the canonical list returned by the stellar CLI.
 ### Subpath imports (preferred — typed-narrow)
 
 ```ts
-import { METHOD_NAMES as BRIDGE_METHODS } from '@stellardao/soroban-client/bridge';
-import type { MethodName } from '@stellardao/soroban-client/bridge';
+import { METHOD_NAMES as BRIDGE_METHODS } from '@stellar-payment-gateway/soroban-client/bridge';
+import type { MethodName } from '@stellar-payment-gateway/soroban-client/bridge';
 
 const allUsed = BRIDGE_METHODS.includes('mint_with_attestation' as MethodName); // true
 ```
@@ -51,11 +51,11 @@ import {
   FACTORY_METHOD_NAMES,
   WRAPPER_TOKEN_METHOD_NAMES,
   type BridgeMethodName,
-} from '@stellardao/soroban-client';
+} from '@stellar-payment-gateway/soroban-client';
 ```
 
 For real call sites, prefer the higher-level wrappers in
-`@stellardao/sdk` (which already validate types against the Soroban host).
+`@stellar-payment-gateway/sdk` (which already validate types against the Soroban host).
 The bindings package exists so the dashboard, relayer, and API can
 introspect the contract surface without pulling the full stellar-sdk
 schema into the browser bundle.

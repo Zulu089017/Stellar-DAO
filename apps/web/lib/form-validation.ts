@@ -1,7 +1,7 @@
 /**
  * Form validation utilities using react-hook-form + zod.
  *
- * Provides reusable form hooks for the StellarDAO dashboard:
+ * Provides reusable form hooks for the Stellar Payment Gateway dashboard:
  *   • useWrapForm — wrap token form
  *   • useVoteForm  — governance vote form
  *   • useCreateAssetForm — create asset form

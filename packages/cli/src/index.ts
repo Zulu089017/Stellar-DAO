@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * StellarDAO CLI — command-line interface for DAO operations.
+ * Stellar Payment Gateway CLI — command-line interface for DAO operations.
  *
  * Provides quick access to common tasks without opening the dashboard:
  *   • View proposals and cast votes
@@ -19,7 +19,7 @@
 import { randomBytes } from 'node:crypto';
 
 const HELP = `
-StellarDAO CLI v0.2.0
+Stellar Payment Gateway CLI v0.2.0
 
 Usage:
   pnpm cli <command> [options]

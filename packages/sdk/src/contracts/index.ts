@@ -1,7 +1,7 @@
 /**
- * StellarDAO SDK — Contract Bindings
+ * Stellar Payment Gateway SDK — Contract Bindings
  *
- * Typed client modules for interacting with on-chain StellarDAO
+ * Typed client modules for interacting with on-chain Stellar Payment Gateway
  * Soroban contracts from off-chain applications (relayers, dashboards,
  * trading bots, indexers).
  *
@@ -19,7 +19,7 @@
  * ## Usage
  *
  * ```ts
- * import { BridgeContract, FactoryContract } from '@stellardao/sdk';
+ * import { BridgeContract, FactoryContract } from '@stellar-payment-gateway/sdk';
  *
  * const bridge = new BridgeContract('C...bridge');
  * const op = bridge.buildMint({ ... });

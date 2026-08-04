@@ -1,4 +1,4 @@
-# ── StellarDAO Web Dockerfile ─────────────────────────────────
+# ── Stellar Payment Gateway Web Dockerfile ─────────────────────────────────
 # Multi-stage build for the Next.js 15 dashboard.
 # Development target: hot-reload via pnpm dev.
 # Production target: standalone output via next build.
@@ -14,20 +14,20 @@ COPY packages/sdk/package.json packages/sdk/
 COPY packages/ui/package.json packages/ui/
 COPY packages/tsconfig/package.json packages/tsconfig/
 COPY apps/web/package.json apps/web/
-RUN pnpm install --frozen-lockfile --filter @stellardao/web...
+RUN pnpm install --frozen-lockfile --filter @stellar-payment-gateway/web...
 
 FROM base AS dev
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .
 EXPOSE 3000
-CMD ["pnpm", "--filter", "@stellardao/web", "dev"]
+CMD ["pnpm", "--filter", "@stellar-payment-gateway/web", "dev"]
 
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .
-RUN pnpm --filter @stellardao/web build
+RUN pnpm --filter @stellar-payment-gateway/web build
 
 FROM base AS runner
 ENV NODE_ENV=production

@@ -14,7 +14,7 @@ import {
   nativeToScVal,
   scValToBigInt,
 } from '@stellar/stellar-sdk';
-import type { LockPayload, MintRequest, SignedAttestation, UnlockPayload } from '@stellardao/shared';
+import type { LockPayload, MintRequest, SignedAttestation, UnlockPayload } from '@stellar-payment-gateway/shared';
 
 export type BridgeInvokeOptions = {
   bridgeContractId: string;

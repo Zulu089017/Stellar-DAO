@@ -16,7 +16,7 @@ their dedicated Stellar wrapper-token contracts.
 4. `set_bridge(new_bridge)` — admin-only upgrade hook for when the bridge
    migrates to a newer signature scheme.
 
-Every registry entry is **deterministic** (salt = `sha256("STELLARDAO_FACTORY_V1"
+Every registry entry is **deterministic** (salt = `sha256("STELLAR_PAYMENT_GATEWAY_FACTORY_V1"
 || source_chain || source_token)`), which means re-running `create_wrapper`
 for the same pair returns the existing clone without deploying a new
 contract.

@@ -30,7 +30,7 @@
  */
 import { EventEmitter } from 'node:events';
 
-import type { AssetRegistryEntry, Transaction } from '@stellardao/shared';
+import type { AssetRegistryEntry, Transaction } from '@stellar-payment-gateway/shared';
 
 export type TransactionEvent = {
   transaction: Transaction;

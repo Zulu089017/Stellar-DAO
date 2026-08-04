@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import type { SourceChainId, Transaction } from '@stellardao/shared';
-import { StatusDot } from '@stellardao/ui';
+import type { SourceChainId, Transaction } from '@stellar-payment-gateway/shared';
+import { StatusDot } from '@stellar-payment-gateway/ui';
 
 import { serverApi } from '@/lib/server-api';
 import { ChainBadge } from '@/components/atoms/chain-badge';
@@ -19,7 +19,7 @@ const EXPLORER_URLS: Record<string, string> = {
 };
 
 export const metadata: Metadata = {
-  title: 'Transaction · StellarDAO',
+  title: 'Transaction · Stellar Payment Gateway',
 };
 
 export default async function TransactionDetailPage({

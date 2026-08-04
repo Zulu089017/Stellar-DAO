@@ -34,13 +34,13 @@ import {
   vi,
   type MockInstance,
 } from 'vitest';
-import { HorizonClient } from '@stellardao/sdk';
+import { HorizonClient } from '@stellar-payment-gateway/sdk';
 import { Keypair } from '@stellar/stellar-sdk';
 import {
   __resetEnvCache,
   type AssetRegistryEntry,
   type Transaction,
-} from '@stellardao/shared';
+} from '@stellar-payment-gateway/shared';
 
 import { createServer } from '../server.js';
 import { __resetContractInstances } from '../soroban/index.js';

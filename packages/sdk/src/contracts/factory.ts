@@ -10,7 +10,7 @@ import {
   TransactionBuilder,
   nativeToScVal,
 } from '@stellar/stellar-sdk';
-import type { AssetId } from '@stellardao/shared';
+import type { AssetId } from '@stellar-payment-gateway/shared';
 
 export type CreateWrapperInput = {
   sourceChain: AssetId['chain'];

@@ -110,7 +110,7 @@ impl Factory {
             .unwrap_or_else(|| panic_with_error!(env, FactoryError::WrapperNotFound))
     }
 
-    /// Public entry point for any developer integrating with StellarDAO.
+    /// Public entry point for any developer integrating with Stellar Payment Gateway.
     ///
     /// `name` and `symbol` should match the source ERC-20 metadata
     /// (`"Stellar Dollar"` / `"wUSD"`, etc.). They become the wrapper-token's
@@ -202,7 +202,7 @@ impl Factory {
 
     fn build_salt(env: &Env, source_chain: &String, source_token: &Bytes) -> BytesN<32> {
         let mut buf = Bytes::new(env);
-        buf.extend_from_slice(b"STELLARDAO_FACTORY_V1");
+        buf.extend_from_slice(b"STELLAR_PAYMENT_GATEWAY_FACTORY_V1");
         // `source_chain` is `soroban_sdk::String` (see the field type
         // change on `SourceTokenKey`). `copy_into_slice` is the only way in
         // 21.7.7 to get raw bytes from a host-managed `String` on both host

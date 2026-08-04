@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { MockInstance } from 'vitest';
 import { Keypair } from '@stellar/stellar-sdk';
-import { __resetEnvCache } from '@stellardao/shared';
-import { FactoryContract } from '@stellardao/sdk';
+import { __resetEnvCache } from '@stellar-payment-gateway/shared';
+import { FactoryContract } from '@stellar-payment-gateway/sdk';
 
 import { createServer } from './server.js';
 import { __resetContractInstances } from './soroban/index.js';

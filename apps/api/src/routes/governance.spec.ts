@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
-import { __resetEnvCache } from '@stellardao/shared';
+import { __resetEnvCache } from '@stellar-payment-gateway/shared';
 import type { FastifyInstance } from 'fastify';
 
 import { createServer } from '../server.js';

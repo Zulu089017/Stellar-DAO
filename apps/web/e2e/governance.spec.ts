@@ -80,7 +80,7 @@ test.describe('Governance Voting', () => {
       await page.goto('/governance');
       const title = await page.title();
       expect(title).toContain('Governance');
-      expect(title).toContain('StellarDAO');
+      expect(title).toContain('Stellar Payment Gateway');
     });
   });
 

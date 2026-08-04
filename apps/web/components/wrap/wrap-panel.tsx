@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Button } from '@stellardao/ui';
+import { Button } from '@stellar-payment-gateway/ui';
 import {
   SOURCE_CHAINS,
   chainLabel,
@@ -9,7 +9,7 @@ import {
   type SourceChainId,
   type Transaction,
   type TxStatus,
-} from '@stellardao/shared';
+} from '@stellar-payment-gateway/shared';
 
 export type WrapStep = 'idle' | 'locking' | 'attesting' | 'minting' | 'completed' | 'failed';
 

@@ -1,4 +1,4 @@
-# Contributing to StellarDAO
+# Contributing to Stellar Payment Gateway
 
 Thank you for your interest in contributing!
 
@@ -66,11 +66,11 @@ When contributing to governance contracts:
 See [`docs/SECURITY.md`](SECURITY.md) for the full threat model and audit checklist.
 
 ### Reporting vulnerabilities
-Email **security@stellardao.dev**. Do not open public issues for security bugs.
+Email **security@stellar-payment-gateway.dev**. Do not open public issues for security bugs.
 
 ## Code Style
 
-- TypeScript: ESLint with `@stellardao/eslint-config`
+- TypeScript: ESLint with `@stellar-payment-gateway/eslint-config`
 - Rust: `cargo fmt` (standard Rust style)
 - Prettier for all other formats
 - Run `pnpm format` before committing
@@ -111,7 +111,7 @@ We use labels to help contributors find appropriate tasks:
 
 ## Grant Platform Participation
 
-StellarDAO is designed for participation on:
+Stellar Payment Gateway is designed for participation on:
 - **[Drips Network](https://drips.network)**: Drips Wave bounties
 - **[GrantFox](https://grantfox.xyz)**: Stellar/Soroban bounties
 

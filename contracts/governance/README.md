@@ -1,6 +1,6 @@
 # Governance Contract
 
-On-chain proposal creation, voting, and execution for StellarDAO.
+On-chain proposal creation, voting, and execution for Stellar Payment Gateway.
 
 ## Features
 

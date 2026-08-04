@@ -1,5 +1,5 @@
 /**
- * Integration test helpers for the StellarDAO API.
+ * Integration test helpers for the Stellar Payment Gateway API.
  *
  * TEST-ONLY MODULE: Do not import from production code.
  * Uses vitest's `vi` which is only available in test contexts.
@@ -14,7 +14,7 @@
  *   afterAll(() => teardownIntegrationEnv());
  */
 
-import { __resetEnvCache } from '@stellardao/shared';
+import { __resetEnvCache } from '@stellar-payment-gateway/shared';
 import { vi } from 'vitest';
 
 /**

@@ -36,7 +36,7 @@ export default async function HomePage() {
               </span>
             </h1>
             <p className="max-w-xl text-base text-stellar-haze sm:text-lg">
-              StellarDAO is a middleware that listens to your source chain, posts a signed
+              Stellar Payment Gateway is a middleware that listens to your source chain, posts a signed
               attestation to the bridge contract, and mints a wrapped SAC-level token on
               Stellar — finality in under 5 seconds and fees measured in cents of a cent.
             </p>

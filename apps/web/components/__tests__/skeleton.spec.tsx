@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
-import { Skeleton } from '@stellardao/ui';
+import { Skeleton } from '@stellar-payment-gateway/ui';
 
 describe('Skeleton', () => {
   it('renders with shimmer-stripe class', () => {

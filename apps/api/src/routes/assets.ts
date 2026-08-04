@@ -6,7 +6,7 @@ import type {
   CreateAssetResponse,
   AssetRegistryEntry,
   SourceChainId,
-} from '@stellardao/shared';
+} from '@stellar-payment-gateway/shared';
 
 import { factory } from '../soroban/index.js';
 import { assetRepository } from '../db/repositories/asset-repository.js';

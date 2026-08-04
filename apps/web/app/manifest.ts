@@ -2,8 +2,8 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'StellarDAO — Cross-Chain Wraps on Stellar',
-    short_name: 'StellarDAO',
+    name: 'Stellar Payment Gateway — Cross-Chain Wraps on Stellar',
+    short_name: 'Stellar Payment Gateway',
     description:
       'Spin up wrapped versions of your Ethereum, Solana, or Polygon tokens on Stellar. Live confirmed by Horizon.',
     start_url: '/',

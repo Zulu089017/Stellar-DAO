@@ -1,6 +1,6 @@
 # Roadmap & Feature Matrix
 
-This document tracks StellarDAO's feature completion status across
+This document tracks Stellar Payment Gateway's feature completion status across
 all layers: contracts, backend, frontend, and infrastructure.
 
 ## Feature Matrix

@@ -47,7 +47,7 @@ async function attemptDelivery(job: WebhookJob): Promise<boolean> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-StellarDAO-Signature': job.signature,
+        'X-Stellar Payment Gateway-Signature': job.signature,
         'X-Webhook-ID': job.id,
         'X-Webhook-Attempt': String(job.attempts),
       },

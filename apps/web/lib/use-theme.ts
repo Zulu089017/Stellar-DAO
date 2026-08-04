@@ -1,5 +1,5 @@
 /**
- * Theme persistence hook for StellarDAO dashboard.
+ * Theme persistence hook for Stellar Payment Gateway dashboard.
  *
  * Persists the user's theme preference (light/dark/system) in
  * localStorage and applies it on page load before React hydrates
@@ -16,7 +16,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 export type Theme = 'light' | 'dark' | 'system';
 
-const THEME_KEY = 'stellardao-theme';
+const THEME_KEY = 'stellar-payment-gateway-theme';
 
 function getSystemTheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'dark';

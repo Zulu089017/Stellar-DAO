@@ -35,7 +35,7 @@ pub struct LockPayload {
 
 impl LockPayload {
     /// Domain-separated digest that the verifier signs. Tag the digest with
-    /// `STELLARDAO_LOCK_V1` so signatures cannot be re-used across message types.
+    /// `STELLAR_PAYMENT_GATEWAY_LOCK_V1` so signatures cannot be re-used across message types.
     ///
     /// Field encoding matches `packages/sdk/src/attestation.ts::buildLockDigest`
     /// byte-for-byte: the relayer produces the same bytes by encoding each
@@ -43,7 +43,7 @@ impl LockPayload {
     /// avoids SCVal wire-format framing so the on-chain digest equals the
     /// off-chain digest without the relayer needing a Soroban SDK.
     pub fn digest(&self, env: &Env) -> BytesN<32> {
-        let tag: &[u8] = b"STELLARDAO_LOCK_V1";
+        let tag: &[u8] = b"STELLAR_PAYMENT_GATEWAY_LOCK_V1";
         let mut buf = Bytes::new(env);
         buf.extend_from_slice(tag);
         // `source_chain` is `soroban_sdk::String` (see the field type change
@@ -116,7 +116,7 @@ pub struct UnlockPayload {
 impl UnlockPayload {
     /// Matches `packages/sdk/src/attestation.ts::buildUnlockDigest` byte-for-byte.
     pub fn digest(&self, env: &Env) -> BytesN<32> {
-        let tag: &[u8] = b"STELLARDAO_UNLOCK_V1";
+        let tag: &[u8] = b"STELLAR_PAYMENT_GATEWAY_UNLOCK_V1";
         let mut buf = Bytes::new(env);
         buf.extend_from_slice(tag);
         let mut chain_bytes = [0u8; 128];

@@ -1,6 +1,6 @@
-# `@stellardao/relayer`
+# `@stellar-payment-gateway/relayer`
 
-The off-chain piece of StellarDAO. It watches source chains (Ethereum /
+The off-chain piece of Stellar Payment Gateway. It watches source chains (Ethereum /
 Solana / Polygon), decides when a `Lock` event warrants minting on
 Stellar, and submits a signed attestation batch to the `bridge`
 contract.
@@ -32,5 +32,5 @@ contract.
   as a real p2p exchange.
 * No replay-protection cache — currently trusts the bridge's nonce set.
 * Source watchers are stubs that substitute the *exact* vault program
-  address. Replace `STELLARDAO_ETH_VAULT` / `STELLARDAO_SOL_VAULT` /
-  `STELLARDAO_POLYGON_VAULT` with the production vault contracts.
+  address. Replace `STELLAR_PAYMENT_GATEWAY_ETH_VAULT` / `STELLAR_PAYMENT_GATEWAY_SOL_VAULT` /
+  `STELLAR_PAYMENT_GATEWAY_POLYGON_VAULT` with the production vault contracts.

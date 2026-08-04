@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config';
 
 /**
- * Vitest config for `@stellardao/sdk`.
+ * Vitest config for `@stellar-payment-gateway/sdk`.
  *
  * `@noble/hashes` and `@noble/curves` ship as dual ESM/CJS packages; their
  * subpath imports (`@noble/hashes/sha256`, `@noble/curves/secp256k1`) are

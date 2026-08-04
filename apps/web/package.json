@@ -1,8 +1,8 @@
 {
-  "name": "@stellardao/web",
+  "name": "@stellar-payment-gateway/web",
   "version": "0.1.0",
   "private": true,
-  "description": "Next.js 15 dashboard — wraps, unwraps and watches StellarDAOs cross-chain settlement.",
+  "description": "Next.js 15 dashboard — wraps, unwraps and watches Stellar Payment Gateways cross-chain settlement.",
   "type": "module",
   "scripts": {
     "dev": "next dev --port 3000",
@@ -21,9 +21,9 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
-    "@stellardao/sdk": "workspace:*",
-    "@stellardao/shared": "workspace:*",
-    "@stellardao/ui": "workspace:*",
+    "@stellar-payment-gateway/sdk": "workspace:*",
+    "@stellar-payment-gateway/shared": "workspace:*",
+    "@stellar-payment-gateway/ui": "workspace:*",
     "@tanstack/react-query": "^5.59.16",
     "clsx": "^2.1.1",
     "next": "^15.0.3",
@@ -35,8 +35,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.61.1",
-    "@stellardao/eslint-config": "workspace:*",
-    "@stellardao/tsconfig": "workspace:*",
+    "@stellar-payment-gateway/eslint-config": "workspace:*",
+    "@stellar-payment-gateway/tsconfig": "workspace:*",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

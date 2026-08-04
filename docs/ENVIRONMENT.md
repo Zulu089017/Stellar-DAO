@@ -88,10 +88,10 @@ Use a secrets manager (Vault, Doppler, GitHub Secrets) to inject environment var
 
 ## Validation
 
-The `@stellardao/shared` package includes an env parser that validates required variables at startup:
+The `@stellar-payment-gateway/shared` package includes an env parser that validates required variables at startup:
 
 ```typescript
-import { parseEnv } from '@stellardao/shared';
+import { parseEnv } from '@stellar-payment-gateway/shared';
 
 const env = parseEnv.api();
 console.log(env.SOROBAN_RPC_URL); // typed access

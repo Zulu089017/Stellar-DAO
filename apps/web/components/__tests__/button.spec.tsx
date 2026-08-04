@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Button } from '@stellardao/ui';
+import { Button } from '@stellar-payment-gateway/ui';
 
 describe('Button', () => {
   it('renders children text', () => {

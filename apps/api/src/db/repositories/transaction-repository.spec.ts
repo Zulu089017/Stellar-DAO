@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Keypair } from '@stellar/stellar-sdk';
-import { __resetEnvCache, type Transaction } from '@stellardao/shared';
+import { __resetEnvCache, type Transaction } from '@stellar-payment-gateway/shared';
 
 import {
   subscribeTransactions,

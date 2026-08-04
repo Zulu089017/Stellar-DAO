@@ -1,5 +1,5 @@
-import { parseEnv } from '@stellardao/shared';
-import { BridgeContract, FactoryContract, WrapperTokenContract } from '@stellardao/sdk';
+import { parseEnv } from '@stellar-payment-gateway/shared';
+import { BridgeContract, FactoryContract, WrapperTokenContract } from '@stellar-payment-gateway/sdk';
 
 /**
  * Lazy contract instances.

@@ -24,8 +24,8 @@
  * extra plumbing on the producer side.
  */
 import type { FastifyInstance } from 'fastify';
-import { parseEnv } from '@stellardao/shared';
-import { HorizonClient } from '@stellardao/sdk';
+import { parseEnv } from '@stellar-payment-gateway/shared';
+import { HorizonClient } from '@stellar-payment-gateway/sdk';
 
 import { subscribeAssets, subscribeTransactions } from './event-bus.js';
 

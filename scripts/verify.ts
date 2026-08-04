@@ -11,11 +11,11 @@ export async function verifyContractOnExplorer(
   //   tsx scripts/verify.ts <contract-id> <path-to-wasm>
   //
   const metadata = {
-    name: 'StellarDAO Contract',
+    name: 'Stellar Payment Gateway Contract',
     version: '0.1.0',
     compiler: 'soroban-sdk 21.7.7',
     optimizer: 'z',
-    repository: 'https://github.com/stellardao/stellardao',
+    repository: 'https://github.com/Zulu089017/Stellar-DAO',
     commit: process.env.GITHUB_SHA ?? 'unknown',
   };
 

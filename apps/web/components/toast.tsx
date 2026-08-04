@@ -9,7 +9,7 @@ interface Toast {
   txHash?: string;
 }
 
-const EVENT_NAME = 'stellardao-toast';
+const EVENT_NAME = 'stellar-payment-gateway-toast';
 
 export function toast(message: string, type: Toast['type'] = 'info', txHash?: string) {
   window.dispatchEvent(

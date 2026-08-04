@@ -1,5 +1,5 @@
 /**
- * OpenAPI / Swagger specification builder for the StellarDAO API.
+ * OpenAPI / Swagger specification builder for the Stellar Payment Gateway API.
  *
  * Generates a complete OpenAPI 3.1 document from the registered
  * Fastify routes. Used by:
@@ -30,10 +30,10 @@ interface OpenApiSpec {
 }
 
 const API_INFO: OpenApiInfo = {
-  title: 'StellarDAO API',
+  title: 'Stellar Payment Gateway API',
   version: '0.2.0',
   description:
-    'REST + SSE API for the StellarDAO cross-chain wrapping middleware. ' +
+    'REST + SSE API for the Stellar Payment Gateway cross-chain wrapping middleware. ' +
     'Provides asset registry, transaction tracking, bridge operations, ' +
     'governance, and real-time event streaming.',
 };
@@ -112,7 +112,7 @@ export function buildOpenApiSpec(_app: FastifyInstance): OpenApiSpec {
     info: API_INFO,
     servers: [
       { url: 'http://localhost:4000', description: 'Local development' },
-      { url: 'https://api.stellardao.dev', description: 'Production' },
+      { url: 'https://api.stellar-payment-gateway.dev', description: 'Production' },
     ],
     paths,
     components: {
@@ -162,7 +162,7 @@ function generateSwaggerHtml(): string {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>StellarDAO API Reference</title>
+  <title>Stellar Payment Gateway API Reference</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css" />
 </head>
 <body>

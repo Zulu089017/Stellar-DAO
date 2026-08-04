@@ -106,7 +106,7 @@ stellar contract invoke --id $FACTORY_CONTRACT_ID -- initialize --admin $ADMIN -
 
 **Governance Token**:
 ```bash
-stellar contract invoke --id $GOVERNANCE_TOKEN_ID -- initialize --admin $ADMIN --name "StellarDAO" --symbol "SDAO" --decimal 18
+stellar contract invoke --id $GOVERNANCE_TOKEN_ID -- initialize --admin $ADMIN --name "Stellar Payment Gateway" --symbol "SDAO" --decimal 18
 ```
 
 **Governance**:
@@ -134,9 +134,9 @@ This emits typed contract clients into `packages/soroban-client/src/bindings/`.
 docker compose up -d
 
 # Or individual services:
-pnpm --filter @stellardao/web dev      # Next.js on :3000
-pnpm --filter @stellardao/api dev      # Fastify on :4000
-pnpm --filter @stellardao/relayer dev  # Relayer watcher
+pnpm --filter @stellar-payment-gateway/web dev      # Next.js on :3000
+pnpm --filter @stellar-payment-gateway/api dev      # Fastify on :4000
+pnpm --filter @stellar-payment-gateway/relayer dev  # Relayer watcher
 ```
 
 ## CI/CD Pipeline

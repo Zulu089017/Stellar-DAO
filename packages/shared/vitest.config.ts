@@ -2,7 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 // Minimal vitest config. The packages/sdk and apps/api configs need
 // `test.server.deps.inline` for `@noble/*` / `@stellar/*` SDKs that
-// ship dual ESM/CJS, but `@stellardao/shared` is pure TS + zod —
+// ship dual ESM/CJS, but `@stellar-payment-gateway/shared` is pure TS + zod —
 // nothing in the tree needs inline transformation, so defaults are
 // fine here.
 

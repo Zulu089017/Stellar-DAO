@@ -1,4 +1,4 @@
-// Root ESLint v9 flat config for the StellarDAO polyrepo.
+// Root ESLint v9 flat config for the Stellar Payment Gateway polyrepo.
 //
 // ESLint v9 dropped legacy `.eslintrc` autoload — every package that runs
 // `eslint src` needs a flat config. The shared presets in

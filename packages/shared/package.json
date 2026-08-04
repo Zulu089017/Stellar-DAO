@@ -1,5 +1,5 @@
 {
-  "name": "@stellardao/shared",
+  "name": "@stellar-payment-gateway/shared",
   "version": "0.1.0",
   "private": true,
   "description": "Cross-package types, constants, source-chain config and env utils.",
@@ -24,8 +24,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@stellardao/eslint-config": "workspace:*",
-    "@stellardao/tsconfig": "workspace:*",
+    "@stellar-payment-gateway/eslint-config": "workspace:*",
+    "@stellar-payment-gateway/tsconfig": "workspace:*",
     "typescript": "^5.6.3",
     "eslint": "^9.13.0",
     "vitest": "^2.1.9"

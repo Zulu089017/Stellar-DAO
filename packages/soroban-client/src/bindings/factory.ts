@@ -5,6 +5,6 @@
 // overwrites this file with the real method list pulled from
 // `stellar contract bindings json`.
 //
-// Source: stellardao_factory
+// Source: stellar_payment_gateway_factory
 export const METHOD_NAMES = [] as const;
 export type MethodName = (typeof METHOD_NAMES)[number];

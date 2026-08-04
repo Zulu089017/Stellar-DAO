@@ -1,7 +1,7 @@
-# `@stellardao/sdk`
+# `@stellar-payment-gateway/sdk`
 
 A high-level Stellar client for the rest of the polyrepo. The contract
-address space lives in `@stellardao/soroban-client` (auto-generated from
+address space lives in `@stellar-payment-gateway/soroban-client` (auto-generated from
 Rust), but everything *application-level* — Horizon queries, attestation
 helpers, transaction shapes — is here.
 
@@ -14,7 +14,7 @@ helpers, transaction shapes — is here.
 | `contracts/wrapper-token` | Build SEP-41 token ops + read helpers |
 
 ```ts
-import { BridgeContract, buildLockDigest, signSecp256k1 } from '@stellardao/sdk';
+import { BridgeContract, buildLockDigest, signSecp256k1 } from '@stellar-payment-gateway/sdk';
 
 const bridge = new BridgeContract(env.BRIDGE_CONTRACT_ID);
 

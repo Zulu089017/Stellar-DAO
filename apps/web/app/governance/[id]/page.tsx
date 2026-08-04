@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { VotePanel } from '@/components/governance/vote-panel';
 
 export const metadata: Metadata = {
-  title: 'Proposal · StellarDAO',
+  title: 'Proposal · Stellar Payment Gateway',
 };
 
 export default function ProposalDetailPage({
@@ -45,7 +45,7 @@ export default function ProposalDetailPage({
           <div className="rounded-xl border border-white/5 bg-white/[0.03] p-6">
             <h2 className="text-sm font-semibold text-white">Description</h2>
             <p className="mt-2 text-sm text-stellar-haze leading-relaxed">
-              This proposal seeks to expand the StellarDAO bridge ecosystem by adding a new
+              This proposal seeks to expand the Stellar Payment Gateway bridge ecosystem by adding a new
               wrapped token, improving cross-chain liquidity and expanding the protocol&apos;s
               reach to more users and developers in the ecosystem.
             </p>

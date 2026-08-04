@@ -23,9 +23,9 @@ const indexPath = resolve(root, 'packages/soroban-client/src/index.ts');
 mkdirSync(out, { recursive: true });
 
 const targets: Array<{ alias: string; file: string }> = [
-  { alias: 'stellardao_bridge', file: 'bridge.ts' },
-  { alias: 'stellardao_factory', file: 'factory.ts' },
-  { alias: 'stellardao_wrapper_token_template', file: 'wrapper-token.ts' },
+  { alias: 'stellar_payment_gateway_bridge', file: 'bridge.ts' },
+  { alias: 'stellar_payment_gateway_factory', file: 'factory.ts' },
+  { alias: 'stellar_payment_gateway_wrapper_token_template', file: 'wrapper-token.ts' },
 ];
 
 // Fallback stub written when `stellar contract bindings json` cannot be

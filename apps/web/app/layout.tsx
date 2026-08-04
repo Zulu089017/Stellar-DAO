@@ -12,13 +12,13 @@ import { ToastContainer } from '@/components/toast';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://stellardao.dev';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://stellar-payment-gateway.dev';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'StellarDAO — Cross-Chain Wraps on Stellar',
-    template: '%s · StellarDAO',
+    default: 'Stellar Payment Gateway — Cross-Chain Wraps on Stellar',
+    template: '%s · Stellar Payment Gateway',
   },
   description:
     'Spin up wrapped versions of your Ethereum, Solana, or Polygon tokens on Stellar. Real-time settlements confirmed by Horizon — finality in under 5 seconds.',
@@ -27,9 +27,9 @@ export const metadata: Metadata = {
     'ERC-20', 'SPL', 'Polygon', 'DAO', 'governance', 'blockchain',
     'wrapped tokens', 'DeFi', 'Horizon',
   ],
-  authors: [{ name: 'StellarDAO Contributors', url: 'https://github.com/Zulu089017/Stellar-DAO' }],
-  creator: 'StellarDAO',
-  publisher: 'StellarDAO',
+  authors: [{ name: 'Stellar Payment Gateway Contributors', url: 'https://github.com/Zulu089017/Stellar-DAO' }],
+  creator: 'Stellar Payment Gateway',
+  publisher: 'Stellar Payment Gateway',
   formatDetection: {
     email: false,
     address: false,
@@ -39,8 +39,8 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: siteUrl,
-    siteName: 'StellarDAO',
-    title: 'StellarDAO — Cross-Chain Wraps on Stellar',
+    siteName: 'Stellar Payment Gateway',
+    title: 'Stellar Payment Gateway — Cross-Chain Wraps on Stellar',
     description:
       'Spin up wrapped versions of your Ethereum, Solana, or Polygon tokens on Stellar. Real-time settlements confirmed by Horizon.',
     images: [
@@ -48,17 +48,17 @@ export const metadata: Metadata = {
         url: `${siteUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'StellarDAO — Cross-Chain Wraps on Stellar',
+        alt: 'Stellar Payment Gateway — Cross-Chain Wraps on Stellar',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'StellarDAO — Cross-Chain Wraps on Stellar',
+    title: 'Stellar Payment Gateway — Cross-Chain Wraps on Stellar',
     description:
       'Spin up wrapped versions of your Ethereum, Solana, or Polygon tokens on Stellar. Real-time settlements confirmed by Horizon.',
     images: [`${siteUrl}/og-image.png`],
-    creator: '@stellardao',
+    creator: '@stellar-payment-gateway',
   },
   robots: {
     index: true,
@@ -100,7 +100,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
           </ErrorBoundary>
           <footer className="mx-auto max-w-7xl px-4 pb-10 text-xs text-stellar-haze sm:px-6 lg:px-10">
-            StellarDAO is an open-source scaffold — never commit funds; always verify
+            Stellar Payment Gateway is an open-source scaffold — never commit funds; always verify
             contract IDs against the latest release.
           </footer>
           <ToastContainer />

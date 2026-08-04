@@ -12,9 +12,9 @@ members = [
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-authors = ["StellarDAO Contributors"]
+authors = ["Stellar Payment Gateway Contributors"]
 license = "MIT"
-repository = "https://github.com/stellardao/stellardao"
+repository = "https://github.com/Zulu089017/Stellar-DAO"
 
 [workspace.dependencies]
 # Pin soroban-sdk to =21.7.7 (matches the pre-22 API surface the

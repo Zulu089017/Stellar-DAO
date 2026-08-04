@@ -1,4 +1,4 @@
-# StellarDAO Smart Contracts
+# Stellar Payment Gateway Smart Contracts
 
 Three Soroban contracts implement the cross-chain wrapping protocol.
 

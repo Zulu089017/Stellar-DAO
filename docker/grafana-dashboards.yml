@@ -1,8 +1,8 @@
-# Grafana dashboard provisioning for StellarDAO
+# Grafana dashboard provisioning for Stellar Payment Gateway
 apiVersion: 1
 
 providers:
-  - name: 'StellarDAO'
+  - name: 'Stellar Payment Gateway'
     orgId: 1
     folder: ''
     type: file

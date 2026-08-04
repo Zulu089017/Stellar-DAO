@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { StatusDot } from '@stellardao/ui';
-import type { Transaction, TxStatus } from '@stellardao/shared';
+import { StatusDot } from '@stellar-payment-gateway/ui';
+import type { Transaction, TxStatus } from '@stellar-payment-gateway/shared';
 
 import { ChainBadge } from '@/components/atoms/chain-badge';
 

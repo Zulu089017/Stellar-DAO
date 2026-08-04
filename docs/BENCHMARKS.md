@@ -1,8 +1,8 @@
 # Performance Benchmarks
 
-Benchmarks for StellarDAO core operations. Run with:
+Benchmarks for Stellar Payment Gateway core operations. Run with:
 ```bash
-pnpm --filter @stellardao/sdk bench
+pnpm --filter @stellar-payment-gateway/sdk bench
 ```
 
 ## Horizon Client

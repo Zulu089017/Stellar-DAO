@@ -1,8 +1,8 @@
 {
-  "name": "@stellardao/api",
+  "name": "@stellar-payment-gateway/api",
   "version": "0.1.0",
   "private": true,
-  "description": "Fastify REST + SSE API for StellarDAO — exposes the asset registry, transactions, and bridges into Horizon.",
+  "description": "Fastify REST + SSE API for Stellar Payment Gateway — exposes the asset registry, transactions, and bridges into Horizon.",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -18,9 +18,9 @@
     "@fastify/helmet": "^12.0.1",
     "@fastify/sensible": "^6.0.1",
     "@stellar/stellar-sdk": "^12.0.0",
-    "@stellardao/sdk": "workspace:*",
-    "@stellardao/shared": "workspace:*",
-    "@stellardao/soroban-client": "workspace:*",
+    "@stellar-payment-gateway/sdk": "workspace:*",
+    "@stellar-payment-gateway/shared": "workspace:*",
+    "@stellar-payment-gateway/soroban-client": "workspace:*",
     "drizzle-orm": "^0.36.1",
     "fastify": "^5.1.0",
     "pg": "^8.13.0",
@@ -29,8 +29,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@stellardao/eslint-config": "workspace:*",
-    "@stellardao/tsconfig": "workspace:*",
+    "@stellar-payment-gateway/eslint-config": "workspace:*",
+    "@stellar-payment-gateway/tsconfig": "workspace:*",
     "@types/node": "^20.14.10",
     "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.27.2",

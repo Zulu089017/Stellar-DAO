@@ -1,5 +1,5 @@
 import pino from 'pino';
-import type { SourceChainId } from '@stellardao/shared';
+import type { SourceChainId } from '@stellar-payment-gateway/shared';
 
 import type { LockEvent } from './sources/types.js';
 

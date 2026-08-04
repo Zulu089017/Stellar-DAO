@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://stellardao.dev';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://stellar-payment-gateway.dev';
   const lastModified = new Date();
 
   const staticRoutes = [
