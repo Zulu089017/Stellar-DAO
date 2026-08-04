@@ -32,3 +32,33 @@ export {
   METHOD_NAMES as WRAPPER_TOKEN_METHOD_NAMES,
   type MethodName as WrapperTokenMethodName,
 } from './bindings/wrapper-token.js';
+
+export {
+  METHOD_NAMES as PAYMENT_METHOD_NAMES,
+  type MethodName as PaymentMethodName,
+} from './bindings/payment.js';
+
+export {
+  METHOD_NAMES as ESCROW_METHOD_NAMES,
+  type MethodName as EscrowMethodName,
+} from './bindings/escrow.js';
+
+export {
+  METHOD_NAMES as INVOICE_METHOD_NAMES,
+  type MethodName as InvoiceMethodName,
+} from './bindings/invoice.js';
+
+export {
+  METHOD_NAMES as TREASURY_METHOD_NAMES,
+  type MethodName as TreasuryMethodName,
+} from './bindings/treasury.js';
+
+export {
+  METHOD_NAMES as FEE_MANAGER_METHOD_NAMES,
+  type MethodName as FeeManagerMethodName,
+} from './bindings/fee-manager.js';
+
+export {
+  METHOD_NAMES as ROLE_MANAGER_METHOD_NAMES,
+  type MethodName as RoleManagerMethodName,
+} from './bindings/role-manager.js';

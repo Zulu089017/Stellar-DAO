@@ -10,7 +10,13 @@
     ".": "./src/index.ts",
     "./bridge": "./src/bindings/bridge.ts",
     "./factory": "./src/bindings/factory.ts",
-    "./wrapper-token": "./src/bindings/wrapper-token.ts"
+    "./wrapper-token": "./src/bindings/wrapper-token.ts",
+    "./payment": "./src/bindings/payment.ts",
+    "./escrow": "./src/bindings/escrow.ts",
+    "./invoice": "./src/bindings/invoice.ts",
+    "./treasury": "./src/bindings/treasury.ts",
+    "./fee-manager": "./src/bindings/fee-manager.ts",
+    "./role-manager": "./src/bindings/role-manager.ts"
   },
   "scripts": {
     "lint": "eslint src --ext .ts",
