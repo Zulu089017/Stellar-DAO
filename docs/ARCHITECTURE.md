@@ -1,82 +1,114 @@
 # Architecture
 
-Stellar Payment Gateway is a **three-layer** system that wraps ERC-20, SPL, and Polygon
-tokens on Stellar. The diagram below traces a wrap from the moment a
-user locks tokens on a source chain to the moment the wrapper-token lands
-in their Stellar wallet.
+Stellar Payment Gateway is a **four-layer** payment ecosystem powered by Stellar and
+Soroban. It combines cross-chain asset wrapping, on-chain payment primitives,
+DAO governance, and a real-time API/dashboard layer.
 
 ## System diagram
 
 ```
-                                       ┌──────────────────────────┐
-                                       │  source chains (Ethereum, │
-                                       │  Solana, Polygon…)       │
-                                       └──────────┬───────────────┘
-                                                  │  Lock event
-                                                  ▼
-        ┌────────────────────────────────────────────────────────────────────┐
-        │  apps/relayer  (Node + @noble/curves)                              │
-        │                                                                    │
-        │  ethereum.ts ─── solana.ts ─── polygon.ts                          │
-        │      │            │            │                                  │
-        │      └─────►  detector.ts  (reconnect/backoff)  ───►  signer.ts    │
-        │                                                  (secp256k1)        │
-        └────────────────────────────────┬───────────────────────────────────┘
-                                         │  signed attestation
-                                         ▼
-        ┌────────────────────────────────────────────────────────────────────┐
-        │  contracts/  (Soroban · Rust)                                       │
-        │                                                                    │
-        │  bridge  ───►  factory  ───►  wrapper-token clones                 │
-        │     verify              deploy                                       │
-        │     nonce-set          registry                                     │
-        │     delegate mint/burn                                              │
-        └────────────────────────────────┬───────────────────────────────────┘
-                                         │  Soroban events
-                                         ▼
-        ┌────────────────────────────────────────────────────────────────────┐
-        │  Horizon SSE  ───►  apps/api  ───►  apps/web (Next.js 15 dashboard)│
-        └────────────────────────────────────────────────────────────────────┘
+                                  ┌──────────────────────────┐
+                                  │  source chains (Ethereum, │
+                                  │  Solana, Polygon…)       │
+                                  └──────────┬───────────────┘
+                                             │  Lock event
+                                             ▼
+   ┌────────────────────────────────────────────────────────────────────┐
+   │  apps/relayer  (Node + @noble/curves)                              │
+   │                                                                    │
+   │  ethereum.ts ─── solana.ts ─── polygon.ts                          │
+   │      │            │            │                                  │
+   │      └─────►  detector.ts  (reconnect/backoff)  ───►  signer.ts    │
+   │                                                  (secp256k1)        │
+   └────────────────────────────────┬───────────────────────────────────┘
+                                    │  signed attestation
+                                    ▼
+   ┌────────────────────────────────────────────────────────────────────┐
+   │  contracts/  (Soroban · Rust — 12 smart contracts)                 │
+   │                                                                    │
+   │  ┌── Bridge Layer ──┐  ┌── Payment Primitives ──┐                │
+   │  │ bridge            │  │ payment               │                │
+   │  │ factory           │  │ escrow                │                │
+   │  │ wrapper-token     │  │ invoice               │                │
+   │  └───────────────────┘  │ treasury              │                │
+   │                         └───────────────────────┘                │
+   │  ┌── Governance ────┐  ┌── Platform Infra ─────┐                │
+   │  │ governance-token  │  │ fee-manager           │                │
+   │  │ governance        │  │ role-manager          │                │
+   │  │ timelock          │  └───────────────────────┘                │
+   │  └───────────────────┘                                           │
+   └────────────────────────────────┬───────────────────────────────────┘
+                                    │  Soroban events
+                                    ▼
+   ┌────────────────────────────────────────────────────────────────────┐
+   │  apps/api (Fastify)  ───  Horizon SSE  ───  apps/web (Next.js 15)  │
+   │                                                                    │
+   │  /assets  /bridge  /transactions  /governance  /analytics         │
+   │  /invoices  /merchants  /webhooks  /events                        │
+   └────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Contract responsibilities
 
-| Contract         | Inputs                                       | Outputs (events)   |
-|------------------|----------------------------------------------|--------------------|
-| `bridge`         | Signed Lock/Unlock payload + attestations    | `MintRequested`, `BurnRequested` |
-| `factory`        | `(source_chain, source_token)` key + meta    | `WrapperCreated` |
-| `wrapper-token`  | `mint(recipient, amount)` from bridge only  | `mint/disallow/burn/transfer/approve` |
+### Bridge Layer (cross-chain asset wrapping)
+| Contract | Purpose | Key Events |
+|----------|---------|------------|
+| `bridge` | Verify relayer attestations, route mint/burn | `MintRequested`, `BurnRequested`, `Paused` |
+| `factory` | Deterministic wrapper-token deployment + registry | `WrapperCreated` |
+| `wrapper-token` | SEP-41 token — mint/burn restricted to bridge | `Mint`, `Burn`, `Transfer`, `Approve` |
 
-Visit each contract's README for the full surface.
+### Payment Primitives (on-chain value transfer)
+| Contract | Purpose | Key Events |
+|----------|---------|------------|
+| `payment` | Send XLM/assets, batch payments (≤50), fee deduction | `PaymentSent`, `BatchPaymentExecuted` |
+| `escrow` | Time-locked escrow with dispute resolution by arbiter | `EscrowCreated`, `EscrowReleased`, `EscrowResolved` |
+| `invoice` | On-chain invoices with partial payment support | `InvoiceCreated`, `InvoicePaid`, `InvoiceCancelled` |
+| `treasury` | Fee aggregation, authorised deposits, admin withdrawals | `Deposit`, `Withdrawal` |
+
+### Governance (DAO operations)
+| Contract | Purpose | Key Events |
+|----------|---------|------------|
+| `governance-token` | SEP-41 token with delegation + checkpointing | `DelegateChanged`, `DelegateVotesChanged` |
+| `governance` | Proposal creation, voting, queueing, execution | `ProposalCreated`, `VoteCast`, `ProposalExecuted` |
+| `timelock` | Delayed execution for governance safety | `TransactionQueued`, `TransactionExecuted` |
+
+### Platform Infrastructure
+| Contract | Purpose | Key Events |
+|----------|---------|------------|
+| `fee-manager` | Configurable fees — global default + per-merchant overrides | `DefaultFeeUpdated`, `MerchantFeeUpdated` |
+| `role-manager` | RBAC — grant/revoke roles (`admin`, `operator`, `merchant`, `relayer`) | `RoleGranted`, `RoleRevoked` |
 
 ## Real-time feed
 
-Soroban emits events for **every** state transition from every contract
-above. Horizon's `GET /contracts/{id}/events` endpoint exposes the
-stream. The dashboard subscribes directly to Horizon. The `api`
-service also exposes `/events` as an SSE fallback so browsers behind
-restrictive CORS or networks don't lose state.
+Soroban emits events for every state transition from all 12 contracts.
+Horizon's `GET /contracts/{id}/events` endpoint exposes the stream. The
+dashboard subscribes directly to Horizon. The `api` service also exposes
+`/events` as an SSE fallback.
 
-## Security model (v1)
+## API surface
 
-1. **Bridge authorisation** — a verifier set + threshold governs which
-   relayer operators can authorise a mint/burn. Updating the set is
-   admin-only (`bridge.set_verifiers`).
-2. **Replay protection** — every accepted payload burns its `nonce` in
-   `persistent` storage. Repeating the same nonce panics.
-3. **Wrapper-token pin** — `initialize` is one-shot — once the bridge
-   address is recorded at clone time it cannot be moved, even by a
-   future factory admin.
-4. **Deterministic addresses** — `factory.create_wrapper` produces
-   the same contract id every time, so attackers can't pre-claim.
+| Prefix | Purpose |
+|--------|---------|
+| `/health` | Service health + network status |
+| `/assets` | Wrapped asset registry (CRUD + pagination) |
+| `/bridge` | Wrap/unwrap endpoints |
+| `/transactions` | Bridge transaction lifecycle |
+| `/governance` | Proposals, voting, delegation |
+| `/invoices` | Invoice CRUD + payment |
+| `/merchants` | Merchant registration, API keys, profile |
+| `/webhooks` | Webhook endpoint management |
+| `/events` | SSE event stream |
+| `/` | Analytics + protocol metrics |
 
-## Out-of-scope for v1
+## Security model
 
-- Real bridge verifiers (secp256k1 host function is not available in
-  this scaffold SDK; the verifier trait is wired but returns `false`
-  so signature checks panic until enabled).
-- Source-chain vault contracts — `Lock` events are emitted by a
-  placeholder; the production Ethereum/Solana/Polygon vault programs
-  are deliberately left as TODO so the scaffold compiles standalone.
-- Governance — explicitly dropped per the project's chosen focus on
-  the wrapping middleware alone.
+1. **Bridge authorisation** — verifier set + threshold governs relayer operators
+2. **Replay protection** — consumed nonces burned in persistent storage
+3. **Wrapper-token pin** — bridge address pinned at clone time, immutable
+4. **Deterministic addresses** — factory produces same contract ID every time
+5. **RBAC** — role-manager enforces admin/operator/merchant/relayer roles across all contracts
+6. **Fee caps** — fee-manager enforces 5% max; payment contract independently caps at 5%
+7. **Timelock** — governance execution delayed by configurable minimum (default 24h)
+8. **Pause mechanisms** — bridge, payment, and treasury contracts support emergency pause
+9. **Escrow arbiter** — third-party arbiter resolves disputes with split decisions
+10. **Invoice expiration** — invoices automatically become unpayable after deadline

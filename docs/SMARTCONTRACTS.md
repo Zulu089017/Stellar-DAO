@@ -2,7 +2,18 @@
 
 ## Overview
 
-Stellar Payment Gateway consists of six Soroban smart contracts written in Rust, all pinned to `soroban-sdk = "=21.7.7"`. Each contract is compiled to WebAssembly (WASM) and deployed to the Stellar network via `stellar contract deploy`.
+Stellar Payment Gateway consists of **twelve** Soroban smart contracts written in Rust,
+all pinned to `soroban-sdk = "=21.7.7"`. Each contract is compiled to WebAssembly (WASM)
+and deployed to the Stellar network via `stellar contract deploy`.
+
+Contracts are organized into four layers:
+
+| Layer | Contracts | Purpose |
+|-------|-----------|---------|
+| Bridge | `bridge`, `factory`, `wrapper-token` | Cross-chain asset wrapping |
+| Payments | `payment`, `escrow`, `invoice`, `treasury` | On-chain payment primitives |
+| Governance | `governance-token`, `governance`, `timelock` | DAO operations |
+| Infrastructure | `fee-manager`, `role-manager` | Platform-wide configuration + RBAC |
 
 ## Contract Architecture
 
@@ -20,12 +31,26 @@ flowchart TD
     end
 
     subgraph Stellar["Stellar Network"]
-        B[Bridge Contract]
-        F[Factory Contract]
-        WT[Wrapper Token]
-        G[Governance Contract]
-        GT[Governance Token]
-        TL[Timelock Controller]
+        subgraph BridgeLayer["Bridge Layer"]
+            B[Bridge]
+            F[Factory]
+            WT[Wrapper Token]
+        end
+        subgraph Payments["Payment Primitives"]
+            P[Payment]
+            E[Escrow]
+            I[Invoice]
+            T[Treasury]
+        end
+        subgraph Governance["Governance"]
+            GT[Governance Token]
+            G[Governance]
+            TL[Timelock]
+        end
+        subgraph Infra["Infrastructure"]
+            FM[Fee Manager]
+            RM[Role Manager]
+        end
     end
 
     Source_Chains -->|Lock Event| D
@@ -34,6 +59,11 @@ flowchart TD
     B -->|Deploy| F
     F -->|Clone| WT
     B -->|Mint/Burn| WT
+    P -->|Fees| T
+    P -->|Fee lookup| FM
+    FM -->|Merchant rate| P
+    RM -->|Auth check| P
+    RM -->|Auth check| E
     G -->|Queue| TL
     TL -->|Execute| B
     GT -->|Vote| G
@@ -41,37 +71,31 @@ flowchart TD
 
 ## Contract Inventory
 
-| Contract | Directory | Description |
-|----------|-----------|-------------|
-| Bridge | `contracts/bridge/` | Cross-chain message verification, mint/burn orchestration |
-| Factory | `contracts/factory/` | Deterministic wrapper-token deployment and registry |
-| Wrapper Token | `contracts/wrapper-token/` | SEP-41 token template (SAC-level) |
-| Governance Token | `contracts/governance-token/` | SEP-41 token with delegation and checkpointing |
-| Governance | `contracts/governance/` | Proposal creation, voting, queueing, execution |
-| Timelock | `contracts/timelock/` | Delayed execution controller for governance safety |
+| # | Contract | Directory | Layer |
+|---|----------|-----------|-------|
+| 1 | Bridge | `contracts/bridge/` | Bridge |
+| 2 | Factory | `contracts/factory/` | Bridge |
+| 3 | Wrapper Token | `contracts/wrapper-token/` | Bridge |
+| 4 | Payment | `contracts/payment/` | Payments |
+| 5 | Escrow | `contracts/escrow/` | Payments |
+| 6 | Invoice | `contracts/invoice/` | Payments |
+| 7 | Treasury | `contracts/treasury/` | Payments |
+| 8 | Governance Token | `contracts/governance-token/` | Governance |
+| 9 | Governance | `contracts/governance/` | Governance |
+| 10 | Timelock | `contracts/timelock/` | Governance |
+| 11 | Fee Manager | `contracts/fee-manager/` | Infrastructure |
+| 12 | Role Manager | `contracts/role-manager/` | Infrastructure |
 
 ---
 
-## Bridge Contract
+## Bridge Layer
+
+### Bridge Contract
 
 **File**: `contracts/bridge/src/lib.rs`
 
-The bridge is the core entry point for cross-chain operations. It verifies signed attestations from relayer operators and orchestrates minting/burning of wrapper tokens.
-
-### Initialization
-
-```rust
-pub fn initialize(env: Env, admin: Address, operators: Vec<BytesN<32>>, threshold: u32)
-```
-
-One-shot initialization that sets:
-- **admin**: Single admin address with privileged access
-- **operators**: N-of-M verifier set (ed25519 public keys)
-- **threshold**: Minimum signatures required for attestation acceptance
-- **fee_bps**: Protocol fee in basis points (default: 0)
-- **paused**: Bridge starts in active state (default: false)
-
-### Key Functions
+The core entry point for cross-chain operations. Verifies signed attestations
+from relayer operators and orchestrates minting/burning of wrapper tokens.
 
 | Function | Auth | Description |
 |----------|------|-------------|
@@ -79,191 +103,189 @@ One-shot initialization that sets:
 | `burn_with_attestation` | relayer | Burn wrapper tokens after verifying Unlock attestations |
 | `pause` / `unpause` | admin | Emergency pause mechanism |
 | `set_fee` / `set_fee_collector` | admin | Protocol fee management |
-| `set_verifiers` | admin | Update the N-of-M verifier set |
-| `initiate_emergency_recovery` | admin | Start emergency recovery with timelock |
-| `execute_emergency_withdrawal` | admin | Execute emergency fund withdrawal after timelock |
+| `set_verifiers` | admin | Update N-of-M verifier set |
+| `initiate_emergency_recovery` | admin | Timelocked emergency recovery |
 
-### Security Model
+**Events**: `MintRequested`, `BurnRequested`, `Paused`, `Unpaused`, `EmergencyRecoveryInitiated`
 
-1. **Signature Threshold**: N-of-M operator signatures required for any mint/burn
-2. **Nonce Replay Protection**: Each consumed nonce is stored in `persistent` storage
-3. **Pause Mechanism**: Admin can halt all bridge operations immediately
-4. **Emergency Recovery**: Timelocked admin takeover with configurable delay
-5. **Cross-Contract Auth**: Uses `env.authorize_as_current_contract` for wrapper-token sub-invocations
-
-### Events
-
-| Event | Topics | Payload |
-|-------|--------|---------|
-| `MintRequested` | `(bridge, MintRequested)` | `(wrapper_token, recipient, amount, source_chain, source_token, nonce)` |
-| `BurnRequested` | `(bridge, BurnRequested)` | `(wrapper_token, source_address, amount, nonce)` |
-| `Paused` | `(bridge, Paused)` | `()` |
-| `Unpaused` | `(bridge, Unpaused)` | `()` |
-| `EmergencyRecoveryInitiated` | `(bridge, EmergencyRecoveryInitiated)` | `(eta)` |
-| `EmergencyRecoveryCanceled` | `(bridge, EmergencyRecoveryCanceled)` | `()` |
-| `EmergencyWithdrawalExecuted` | `(bridge, EmergencyWithdrawalExecuted)` | `(admin)` |
-
----
-
-## Factory Contract
+### Factory Contract
 
 **File**: `contracts/factory/src/lib.rs`
 
-The factory contract manages deterministic deployment of wrapper tokens. It stores a template WASM hash and deploys new wrapper contracts for each `(source_chain, source_token)` pair.
-
-### Key Functions
+Deterministic wrapper-token deployment. Produces the same contract ID for
+the same `(source_chain, source_token)` pair every time.
 
 | Function | Auth | Description |
 |----------|------|-------------|
-| `initialize` | admin | One-shot init with template WASM hash and bridge address |
-| `create_wrapper` | bridge | Deploy a new wrapper token (deterministic address) |
+| `create_wrapper` | bridge | Deploy wrapper token (deterministic address) |
 | `get_wrapper` | anyone | Look up deployed wrapper by source chain + token |
-| `set_template` | admin | Update the wrapper token template |
 
-### Deterministic Addresses
-
-The factory produces the same contract ID for the same `(source_chain, source_token)` pair every time, preventing front-running and pre-computation attacks.
-
----
-
-## Wrapper Token Contract
+### Wrapper Token Contract
 
 **File**: `contracts/wrapper-token/src/lib.rs`
 
-SEP-41 compliant token contract with mint/burn controlled exclusively by the bridge. Each wrapper token represents a specific source-chain asset.
-
-### Key Functions
+SEP-41 compliant token with mint/burn restricted to the bridge.
 
 | Function | Auth | Description |
 |----------|------|-------------|
-| `initialize` | admin | One-shot init with metadata, bridge address |
-| `mint` | bridge only | Mint tokens to a recipient |
-| `burn` | bridge only | Burn tokens from an address |
-| `transfer` | anyone | Standard SEP-41 transfer |
-| `approve` / `allowance` | anyone | Standard SEP-41 approval |
-| `name` / `symbol` / `decimals` | anyone | SEP-41 metadata queries |
-
-### Security
-
-- `mint`/`burn` are restricted to the bridge contract address
-- `initialize` is one-shot — the bridge address is permanently pinned
+| `mint` / `burn` | bridge only | Supply control |
+| `transfer` / `approve` / `transfer_from` | anyone | Standard SEP-41 |
 
 ---
 
-## Governance Token Contract
+## Payment Primitives
 
-**File**: `contracts/governance-token/src/lib.rs`
+### Payment Contract
 
-SEP-41 token extended with voting delegation and checkpointing (similar to Compound's COMP token).
+**File**: `contracts/payment/src/lib.rs`
 
-### Key Functions
+Handles XLM and Stellar asset transfers with configurable platform fees.
 
 | Function | Auth | Description |
 |----------|------|-------------|
-| `delegate` | token holder | Delegate voting power to another address |
-| `get_current_votes` | anyone | Query voting power at current ledger |
-| `get_past_votes` | anyone | Query checkpointed voting power at a historical ledger |
-| `mint` | admin | Mint new governance tokens |
-| `burn` | admin | Burn governance tokens |
+| `send_xlm` | sender | Transfer XLM with fee deduction |
+| `send_asset` | sender | Transfer custom Stellar asset |
+| `batch_payment` | sender | Up to 50 atomic payments |
+| `set_fee` / `set_fee_collector` | admin | Fee configuration (max 5%) |
+| `pause` / `unpause` | admin | Emergency halt |
+| `balance_of` | anyone | Query tracked balance |
 
-### Checkpointing
+**Events**: `PaymentSent`, `BatchPaymentExecuted`, `FeeUpdated`, `Paused`, `Unpaused`
 
-Voting power is snapshotted at each delegation change. The governance contract reads these checkpoints to determine voting power at proposal creation time.
+### Escrow Contract
 
----
+**File**: `contracts/escrow/src/lib.rs`
 
-## Governance Contract
-
-**File**: `contracts/governance/src/lib.rs`
-
-On-chain DAO governance: create proposals, vote, queue via timelock, and execute.
-
-### Proposal Lifecycle
-
-```mermaid
-stateDiagram-v2
-    [*] --> Pending: Created
-    Pending --> Active: Voting delay elapsed
-    Active --> Succeeded: For > Against & quorum met
-    Active --> Defeated: Against >= For or quorum not met
-    Active --> Canceled: Proposer cancels
-    Succeeded --> Queued: Queued in timelock
-    Queued --> Executed: Timelock delay elapsed
-    Queued --> Canceled: Canceled before execution
-    Executed --> [*]
-    Defeated --> [*]
-    Canceled --> [*]
-```
-
-### Key Parameters
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| Voting Period | Duration in ledgers | 7 days (~7,000 ledgers) |
-| Voting Delay | Delay before voting starts | 1 ledger |
-| Proposal Threshold | Min voting power to propose | 1,000 tokens |
-| Quorum | % of total supply required | 4% |
-
----
-
-## Timelock Controller
-
-**File**: `contracts/timelock/src/lib.rs`
-
-Delays governance execution by a configurable number of ledgers, providing a window for users to review and exit if necessary.
-
-### Key Functions
+Time-locked escrow with 6-state lifecycle and arbiter dispute resolution.
 
 | Function | Auth | Description |
 |----------|------|-------------|
-| `initialize` | admin | One-shot init with governance address and delay |
-| `queue_transaction` | governance | Queue a transaction for delayed execution |
-| `execute_transaction` | governance | Execute after delay expires |
-| `cancel_transaction` | admin/governance | Cancel before execution |
-| `set_min_delay` | admin | Update the minimum delay |
+| `create_escrow` | depositor | Create escrow with recipient + arbiter |
+| `fund_escrow` | depositor | Lock funds in escrow |
+| `release_escrow` | depositor or arbiter | Release to recipient |
+| `refund_escrow` | recipient or arbiter | Refund to depositor |
+| `dispute_escrow` | either party | Raise dispute |
+| `resolve_dispute` | arbiter only | Split funds (must sum to amount) |
+| `get_escrow` / `escrow_count` | anyone | Query state |
 
-### Timing
+**Events**: `EscrowCreated`, `EscrowFunded`, `EscrowReleased`, `EscrowRefunded`, `EscrowDisputed`, `EscrowResolved`
 
-- **Min Delay**: Minimum ledgers before execution (configurable)
-- **Grace Period**: Window after ETA during which execution is allowed
-- **ETA Calculation**: `current_ledger + min_delay`
+**Lifecycle**: `Created → Funded → Released | Refunded | Disputed → Resolved`
+
+### Invoice Contract
+
+**File**: `contracts/invoice/src/lib.rs`
+
+On-chain invoices with partial payment support and expiration.
+
+| Function | Auth | Description |
+|----------|------|-------------|
+| `create_invoice` | creator | Create invoice payable in any asset |
+| `pay_invoice` | payer only | Full or partial payment |
+| `cancel_invoice` | creator only | Cancel unpaid invoice |
+| `expire_invoice` | anyone | Mark expired after deadline |
+| `get_invoice` / `invoice_count` / `is_payable` | anyone | Query state |
+
+**Events**: `InvoiceCreated`, `InvoicePaid`, `InvoiceCancelled`, `InvoiceExpired`
+
+**Lifecycle**: `Created → PartiallyPaid → Paid | Cancelled | Expired`
+
+### Treasury Contract
+
+**File**: `contracts/treasury/src/lib.rs`
+
+Fee aggregation with authorised depositor whitelist.
+
+| Function | Auth | Description |
+|----------|------|-------------|
+| `deposit` | authorised contract | Route fees into treasury per asset |
+| `withdraw` | admin only | Withdraw to any destination |
+| `add_depositor` / `remove_depositor` | admin | Manage whitelist |
+| `balance` | anyone | Query balance per asset |
+
+**Events**: `Deposit`, `Withdrawal`, `DepositorAdded`, `DepositorRemoved`
+
+---
+
+## Governance
+
+See the existing detailed documentation in [SMARTCONTRACTS.md](#governance) for
+the Governance Token, Governance, and Timelock contracts — these remain unchanged
+from the original six-contract architecture.
+
+---
+
+## Infrastructure
+
+### Fee Manager Contract
+
+**File**: `contracts/fee-manager/src/lib.rs`
+
+Configurable fee management with per-merchant overrides.
+
+| Function | Auth | Description |
+|----------|------|-------------|
+| `set_default_fee` | admin | Global fee rate (max 5%) |
+| `set_merchant_fee` | admin | Per-merchant override |
+| `remove_merchant_fee` | admin | Remove override → fall back to default |
+| `calculate_fee` | anyone | Resolve: merchant override → global default |
+| `calculate_fee_with_volume` | anyone | Volume-aware fee lookup |
+
+**Resolution order**: merchant override → global default → 0
+
+**Events**: `DefaultFeeUpdated`, `MerchantFeeUpdated`, `MerchantFeeRemoved`
+
+### Role Manager Contract
+
+**File**: `contracts/role-manager/src/lib.rs`
+
+Role-Based Access Control for the entire platform.
+
+| Function | Auth | Description |
+|----------|------|-------------|
+| `grant_role` | admin | Assign role to address |
+| `revoke_role` | admin | Remove role from address |
+| `has_role` | anyone | Permission check (cross-contract usable) |
+
+**Roles**: `"admin"`, `"operator"`, `"merchant"`, `"relayer"` — extensible via Symbol
+
+**Events**: `RoleGranted`, `RoleRevoked`
 
 ---
 
 ## Storage Architecture
 
+All contracts use the same storage pattern:
+
 ```rust
-enum DataKey {
-    Initialized,         // bool: one-shot guard
-    Admin,               // Address: contract admin
-    Operators,           // Vec<BytesN<32>>: verifier set
-    Threshold,           // u32: signature threshold
-    Paused,              // bool: emergency pause
-    FeeBps,              // u32: protocol fee basis points
-    FeeCollector,        // Address: fee recipient
-    EmergencyAdmin,      // Address: emergency fallback admin
-    EmergencyTimelock,   // u32: recovery timelock ETA
+#[contracttype]
+pub enum DataKey {
+    Initialized,    // bool: one-shot guard
+    Admin,          // Address: contract admin
+    // ... contract-specific keys
+    Entity(u64),    // Map variant for entity-by-id storage
 }
 ```
 
-- **Instance Storage**: Configuration values (admin, operators, threshold)
-- **Persistent Storage**: Nonces, proposals, timelock transactions
-- **Temporary Storage**: Not used (all state must survive upgrades)
+- **Instance Storage**: Configuration (admin, fees, thresholds, counters)
+- **Persistent Storage**: User data (balances, escrows, invoices, roles, nonces)
+- **Temporary Storage**: Not used (all state survives upgrades)
 
 ---
 
-## Gas Optimization Notes
+## Gas Optimization
 
-1. **Pinned SDK version** (`=21.7.7`) — deterministic WASM output per commit
-2. **`#[contracterror]`** — custom errors are cheaper than string panics
-3. **Persistent vs Instance** — persistent storage for long-lived user data
-4. **Minimal storage reads** — cache values where possible
-5. **Batch operations** — `Vec` arguments for multi-action proposals
+1. **Pinned SDK** (`=21.7.7`) — deterministic WASM output
+2. **`#[contracterror]`** — custom errors cheaper than string panics
+3. **Persistent vs Instance** — persistent for user data, instance for config
+4. **Minimal reads** — cache values inline where possible
+5. **Batch operations** — `Vec` arguments for multi-item operations
 
 ---
 
 ## Known Limitations
 
-1. **Testutils unavailable** — `soroban-sdk` testutils feature is disabled due to trait resolution issues (see `docs/soroban-testutils-issue.md`)
-2. **Signature verification stubbed** — real ed25519 verification uses `env.crypto()` but the attestation digest format may need auditing before mainnet
-3. **No upgradability pattern** — contracts are immutable after deployment; future upgrades require new deployments and migration
+1. **Testutils unavailable** — `soroban-sdk` testutils disabled (see `docs/soroban-testutils-issue.md`)
+2. **Signature verification stubbed** — real ed25519 verification needs auditing before mainnet
+3. **No upgradability pattern** — contracts are immutable after deployment
+4. **XLM transfers conceptual** — payment contract tracks balances internally; actual XLM settlement requires Stellar transaction integration
