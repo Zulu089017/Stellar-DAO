@@ -22,7 +22,7 @@
     "@stellar-payment-gateway/shared": "workspace:*",
     "@stellar-payment-gateway/soroban-client": "workspace:*",
     "ethers": "^6.13.3",
-    "pino": "^9.5.0",
+    "pino": "^10.3.1",
     "pino-pretty": "^11.3.0",
     "zod": "^3.23.8"
   },
