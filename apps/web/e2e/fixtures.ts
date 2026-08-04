@@ -26,7 +26,9 @@ export class DashboardPage {
   }
 
   get settlementFeedHeading() {
-    return this.page.getByText('Real-time settlement feed');
+    // Use getByRole to avoid strict-mode collision with the command
+    // palette which also contains "Real-time settlement feed" text.
+    return this.page.getByRole('heading', { name: 'Real-time settlement feed' });
   }
 
   async isLoaded() {
