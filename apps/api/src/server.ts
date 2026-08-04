@@ -18,6 +18,7 @@ import { Keypair } from '@stellar/stellar-sdk';
 import { parseEnv } from '@stellar-payment-gateway/shared';
 
 import { initAssetRepository } from './db/repositories/asset-repository.js';
+import { initInvoiceRepository } from './db/repositories/invoice-repository.js';
 import { initTransactionRepository } from './db/repositories/transaction-repository.js';
 import { assetRoutes } from './routes/assets.js';
 import { bridgeRoutes } from './routes/bridge.js';
@@ -26,6 +27,8 @@ import { transactionRoutes } from './routes/transactions.js';
 import { webhookRoutes } from './routes/webhooks.js';
 import { governanceRoutes } from './routes/governance.js';
 import { analyticsRoutes } from './routes/analytics.js';
+import { invoiceRoutes } from './routes/invoices.js';
+import { merchantRoutes } from './routes/merchants.js';
 import { registerSseBridge } from './sse/horizon-bridge.js';
 import { registerGovernanceSse } from './sse/governance-bridge.js';
 import { rateLimitPlugin } from './middleware/rate-limit.js';
@@ -85,6 +88,7 @@ app.decorate(
   // same worker without leaking the swap between specs — the env
   // cache is reset in each beforeEach via `__resetEnvCache()`.
   await initAssetRepository(env.DATABASE_URL);
+  await initInvoiceRepository(env.DATABASE_URL);
   await initTransactionRepository(env.DATABASE_URL);
 
   await app.register(rateLimitPlugin);
@@ -98,6 +102,8 @@ app.decorate(
   await app.register(webhookRoutes, { prefix: '/webhooks' });
   await app.register(governanceRoutes, { prefix: '/governance' });
   await app.register(analyticsRoutes, { prefix: '/' });
+  await app.register(invoiceRoutes, { prefix: '/invoices' });
+  await app.register(merchantRoutes, { prefix: '/merchants' });
 
   await registerSseBridge(app);
   await registerGovernanceSse(app);

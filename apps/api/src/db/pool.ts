@@ -58,6 +58,32 @@ export const bootstrapSchema = async (
       decimals INTEGER NOT NULL,
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
+    CREATE TABLE IF NOT EXISTS invoices (
+      id VARCHAR(64) PRIMARY KEY,
+      creator VARCHAR(64) NOT NULL,
+      payer VARCHAR(64) NOT NULL,
+      token VARCHAR(16) NOT NULL,
+      total_amount BIGINT NOT NULL,
+      paid_amount BIGINT NOT NULL DEFAULT 0,
+      expiration_ledger INTEGER NOT NULL,
+      status VARCHAR(16) NOT NULL DEFAULT 'created',
+      memo VARCHAR(256) NOT NULL DEFAULT '',
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS merchants (
+      id VARCHAR(64) PRIMARY KEY,
+      name VARCHAR(128) NOT NULL,
+      email VARCHAR(256) NOT NULL,
+      website VARCHAR(512),
+      webhook_url VARCHAR(512),
+      api_key_hash VARCHAR(128) NOT NULL,
+      api_key_prefix VARCHAR(16) NOT NULL,
+      roles VARCHAR(256) NOT NULL DEFAULT 'merchant',
+      active VARCHAR(1) NOT NULL DEFAULT 't',
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
     CREATE TABLE IF NOT EXISTS transactions (
       id VARCHAR(64) PRIMARY KEY,
       type VARCHAR(8) NOT NULL,

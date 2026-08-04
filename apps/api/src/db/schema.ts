@@ -23,6 +23,34 @@ export const assets = pgTable('assets', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+export const invoices = pgTable('invoices', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  creator: varchar('creator', { length: 64 }).notNull(),
+  payer: varchar('payer', { length: 64 }).notNull(),
+  token: varchar('token', { length: 16 }).notNull(),
+  totalAmount: bigint('total_amount', { mode: 'bigint' }).notNull(),
+  paidAmount: bigint('paid_amount', { mode: 'bigint' }).notNull().default(0n),
+  expirationLedger: integer('expiration_ledger').notNull(),
+  status: varchar('status', { length: 16 }).notNull().default('created'),
+  memo: varchar('memo', { length: 256 }).notNull().default(''),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const merchants = pgTable('merchants', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  name: varchar('name', { length: 128 }).notNull(),
+  email: varchar('email', { length: 256 }).notNull(),
+  website: varchar('website', { length: 512 }),
+  webhookUrl: varchar('webhook_url', { length: 512 }),
+  apiKeyHash: varchar('api_key_hash', { length: 128 }).notNull(),
+  apiKeyPrefix: varchar('api_key_prefix', { length: 16 }).notNull(),
+  roles: varchar('roles', { length: 256 }).notNull().default('merchant'),
+  active: varchar('active', { length: 1 }).notNull().default('t'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 export const transactions = pgTable('transactions', {
   id: varchar('id', { length: 64 }).primaryKey(),
   type: varchar('type', { length: 8 }).notNull(),
