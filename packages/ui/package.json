@@ -24,7 +24,7 @@
   "devDependencies": {
     "@stellar-payment-gateway/eslint-config": "workspace:*",
     "@stellar-payment-gateway/tsconfig": "workspace:*",
-    "@types/react": "^18.3.12",
+    "@types/react": "^19.2.18",
     "react": "^19.0.0-rc-66855b96-20241106",
     "typescript": "^5.6.3",
     "vitest": "^2.1.4",
