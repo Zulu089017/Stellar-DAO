@@ -31,7 +31,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - name: Run tests with coverage
-        run: pnpm test -- --coverage
+        run: pnpm --filter @stellar-payment-gateway/api --filter @stellar-payment-gateway/web exec vitest run --coverage
+        env:
+          NODE_OPTIONS: '--experimental-require-module'
 
       - name: Upload coverage to Codecov
         if: github.event_name == 'push'
